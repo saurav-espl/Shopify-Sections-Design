@@ -1,0 +1,399 @@
+<style>  
+.section-{{ section.id }}-spacing {
+  padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+  padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  margin-top: {{ section.settings.margin_top | times: 0.75 | round: 0 }}px;
+  margin-bottom: {{ section.settings.margin_bottom | times: 0.75 | round: 0 }}px;
+}
+
+@media screen and (min-width: 750px) {
+  .section-{{ section.id }}-spacing {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+    margin-top: {{ section.settings.margin_top }}px;
+    margin-bottom: {{ section.settings.margin_bottom }}px;
+  }
+}
+
+.section-{{ section.id }} {
+  background: {{ section.settings.bg_color }};
+  overflow: hidden;
+  padding: 20px;
+  border-radius: 15px;
+  border: 2px solid #e1b44a;
+}
+.writers-slider h2, .writers-content h2 {
+  color: #000000;
+}
+
+.section-{{ section.id }} .writers-content {
+  flex: 1;
+  min-width: 550px;
+  padding-right: 50px;
+}
+
+.section-{{ section.id }} .writer-card {
+  transition: transform 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+}
+.writers-wrapper {
+  display: flex;
+}
+.writers-slider {
+  width: 100%;
+  overflow: hidden;
+}
+.section-{{ section.id }} .writer-card img {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  min-height: 350px;
+}
+
+.section-{{ section.id }} .writer-name {
+  margin: 10px 0;
+}
+
+.section-{{ section.id }} .writer-btn {
+  display: inline-block;
+  padding: 2px 5px;
+  border-radius: 25px;
+  background: #000000;
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid #000000;
+  width: 150px;
+  margin: auto;
+}
+
+.section-{{ section.id }} .writer-btn:hover {
+  background: transparent;
+  color: #000000;
+}
+
+/* Swiper Style Adjustments */
+.custom-swiper--button {
+  position: absolute;
+  transform: translate(0%, -50%);
+  top: 40%;
+  z-index: 9;
+  height: 35px;
+  width: 35px;
+  background: #e1b44a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50px;
+  padding: 8px;
+  color: #fff;
+  cursor: pointer;
+}
+.custom-swiper--button-next{
+  right: 15px;
+}
+.custom-swiper--button-prev{
+  left: 15px;
+}
+.custom-swiper--button-prev svg {
+  transform: rotate(180deg);
+}
+.custom-swiper-pagination {
+  margin-top: 30px;
+  text-align: center;
+}
+.custom-swiper-pagination .swiper-pagination-bullet {
+  border: 2px solid #e1b44a;
+  height: 10px;
+  width: 10px;
+  background: transparent;
+  opacity: 1;
+  transition: 0.4s;
+  cursor: pointer;
+}
+.custom-swiper-pagination .swiper-pagination-bullet-active {
+  background: #e1b44a;
+  width: 30px;
+  border-radius: 15px;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 1024px) {
+  .section-{{ section.id }} .writers-content {
+    min-width: 300px;
+  }
+  .section-{{ section.id }} .writer-card img {
+    min-height: 210px;
+  }
+  .section-{{ section.id }} .writer-btn{
+    padding: 5px 10px;
+  }
+  .section-{{ section.id }} .writers-content,
+  .section-{{ section.id }} .writers-slider {
+    width: 100%;
+    flex: none;
+  }
+  .writers-wrapper {
+    flex-direction: column;
+  }
+}
+@media screen and (max-width: 749px) {
+  .writers-content{
+    padding-right: 0 !important;
+    margin-bottom: 15px;
+  }
+}
+</style>
+
+<div class="section-{{ section.id }}-spacing">
+  <div class="page-width">
+    <div class="writers-wrapper section-{{ section.id }} section-{{ section.id }}-inner_spacing">
+      <div class="writers-content">
+        <h2>{{ section.settings.title }}</h2>
+        <div>{{ section.settings.description }}</div>
+      </div>
+
+      <div class="writers-slider">
+        <h2>{{ section.settings.slider_title }}</h2>
+        <div class="swiper custom-writer-swiper-{{ section.id }}">
+          <div class="swiper-wrapper">
+            {% for block in section.blocks %}
+              <div class="swiper-slide">
+                <div class="writer-card">
+                  {% if block.settings.image %}
+                    <div class="writer-image-container">
+                      <img src="{{ block.settings.image | image_url: width: 400 }}" alt="{{ block.settings.name }}" width="auto" height="auto" loading="lazy">
+                    </div>
+                  {% endif %}
+                  <div class="writer-name h3">{{ block.settings.name }}</div>
+                  {% if block.settings.button_text != blank %}
+                    <a href="{{ block.settings.button_link }}" class="writer-btn">
+                      {{ block.settings.button_text }}
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          {% if section.settings.show_pagination %}
+            <!-- Pagination (dots) -->
+            <div class="custom-swiper-pagination text_with-image-slider_pagination"></div>
+          {% endif %}
+
+          {% if section.settings.show_arrow %}
+            <!-- Navigation buttons -->
+            <div class="custom-swiper--button custom-swiper--button-next text_with-image-slider_button-next">
+              {{ 'icon-right-arrow.svg' | inline_asset_content }}
+            </div>
+            <div class="custom-swiper--button custom-swiper--button-prev text_with-image-slider_button-prev">
+              {{ 'icon-right-arrow.svg' | inline_asset_content }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Wait for the section to be fully loaded
+  if (document.querySelector(".custom-writer-swiper-{{ section.id }}")) {
+    // Calculate if we should loop based on number of blocks
+    var shouldLoop = {{ section.blocks.size }} > 3;
+    
+    new Swiper(".custom-writer-swiper-{{ section.id }}", {
+      slidesPerView: {{ section.settings.slides_mobile }}.2,
+      spaceBetween: 20,
+      loop: {{ section.settings.loop }},
+      {% if section.settings.autoplay %}
+        autoplay: {
+          delay: {{ section.settings.autoplay_delay }},
+          disableOnInteraction: false,
+        },
+      {% endif %}
+      navigation: {
+        nextEl: ".text_with-image-slider_button-next",
+        prevEl: ".text_with-image-slider_button-prev",
+      },
+      pagination: {
+        el: '.text_with-image-slider_pagination',
+        clickable: true,
+      },
+      breakpoints: {
+        768: {
+          slidesPerView: 2,
+          spaceBetween: 15
+        },
+        1200: {
+          slidesPerView: {{ section.settings.slides_desktop }},
+          spaceBetween: 30
+        }
+      }
+    });
+  }
+});
+</script>
+
+{% schema %}
+{
+  "name": "Content Writers",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title",
+      "default": "Our Content Writers"
+    },
+    {
+      "type": "text",
+      "id": "slider_title",
+      "label": "Images Sldier Title",
+      "default": "Our Content Writers"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description",
+      "default": "<p>Add your section description here.</p>"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background Color",
+      "default": "#000000"
+    },
+    {
+      "type": "number",
+      "id": "slides_desktop",
+      "label": "Slides per view (Desktop)",
+      "default": 3
+    },
+    {
+      "type": "number",
+      "id": "slides_mobile",
+      "label": "Slides per view (Mobile)",
+      "default": 1
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pagination",
+      "default": true,
+      "label": "Show Pagination Dots"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrow",
+      "default": true,
+      "label": "Show Navigation Arrow"
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Autoplay",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "autoplay_delay",
+      "min": 1000,
+      "max": 8000,
+      "step": 500,
+      "default": 3000,
+      "label": "Autoplay Delay (ms)"
+    },
+    {
+      "type": "checkbox",
+      "id": "loop",
+      "label": "Loop Slides",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Section Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding Top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding Bottom",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Margin Top",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Margin Bottom",
+      "default": 0
+    }
+  ],
+  "blocks": [
+    {
+      "type": "writer",
+      "name": "Writer",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Writer Image"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Writer Name",
+          "default": "Writer Name"
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "label": "Button Text",
+          "default": "Know More"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Button Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Content Writers",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}
