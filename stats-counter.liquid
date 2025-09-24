@@ -1,0 +1,555 @@
+<style>
+  .stats-section-{{ section.id }} {
+    padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;
+    background-color: {{ section.settings.background_color }};
+  }
+  
+  .stats-container--{{ section.id }} {
+    display: grid;
+    grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
+    gap: {{ section.settings.column_gap }}px;
+    text-align: center;
+  }
+  
+  .stat-box {
+    padding: 40px 20px;
+    background: {{ section.settings.card_bg_color }};
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+  
+  .stat-box:hover {
+    transform: translateY(-5px);
+    {% comment %} box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); {% endcomment %}
+    background: {{ section.settings.card_hover_bg_color }};
+  }
+  
+  .stat-number-{{ section.id }} {
+    font-size: {{ section.settings.number_size }}px;
+    font-weight: {{ section.settings.number_weight }};
+    color: {{ section.settings.number_color }};
+    margin-bottom: 12px;
+    line-height: 1;
+    transition: all 0.3s ease;
+  }
+  
+  .stat-box:hover .stat-number-{{ section.id }} {
+    color: {{ section.settings.number_hover_color }};
+    transform: scale(1.05);
+  }
+  
+  .stat-label-{{ section.id }} {
+    font-size: {{ section.settings.label_size }}px;
+    font-weight: {{ section.settings.label_weight }};
+    color: {{ section.settings.label_color }};
+    text-transform: {{ section.settings.label_transform }};
+    transition: all 0.3s ease;
+  }
+  
+  .stat-box:hover .stat-label-{{ section.id }} {
+    color: {{ section.settings.label_hover_color }};
+  }
+  
+  @media screen and (max-width: 989px) {
+    .stats-container--{{ section.id }} {
+      grid-template-columns: repeat({{ section.settings.columns_tablet }}, 1fr);
+    }
+    
+    .stat-number-{{ section.id }} {
+      font-size: calc({{ section.settings.number_size }}px * 0.8);
+    }
+    
+    .stat-label-{{ section.id }} {
+      font-size: calc({{ section.settings.label_size }}px * 0.9);
+    }
+  }
+  
+  @media screen and (max-width: 749px) {
+    .stats-container--{{ section.id }} {
+      grid-template-columns: repeat({{ section.settings.columns_mobile }}, 1fr);
+    }
+    
+    .stats-section-{{ section.id }} {
+      padding: {{ section.settings.padding_top_mobile }}px 0 {{ section.settings.padding_bottom_mobile }}px;
+    }
+    
+    .stat-number-{{ section.id }} {
+      font-size: calc({{ section.settings.number_size }}px * 0.7);
+    }
+    
+    .stat-label-{{ section.id }} {
+      font-size: calc({{ section.settings.label_size }}px * 0.8);
+    }
+  }
+</style>
+
+<section class="stats-section-{{ section.id }} color-{{ section.settings.color_scheme }}">
+  <div class="page-width">
+    {%- if section.settings.heading != blank -%}
+      <div class="section_content-box {% if section.settings.content_align == 'left' %}left{% elsif section.settings.content_align == 'center' %}center{% else %}right{% endif %}">
+        <h2 class="title inline-richtext {{ section.settings.heading_size }}">{{ section.settings.heading }}</h2>
+        {%- if section.settings.description != blank -%}
+          <div class="section-description">{{ section.settings.description }}</div>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+    
+    <div class="stats-container--{{ section.id }}">
+      {% for block in section.blocks %}
+        <div class="stat-box" {{ block.shopify_attributes }}>
+          <div class="stat-number-{{ section.id }}" data-target="{{ block.settings.number }}">
+            {{ block.settings.prefix }}{{ block.settings.start_number }}{{ block.settings.suffix }}
+          </div>
+          <div class="stat-label-{{ section.id }}">{{ block.settings.label }}</div>
+          <p class="stat-label-desc">{{ block.settings.label-2 }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const statsSection = document.querySelector('.stats-section-{{ section.id }}');
+  if (!statsSection) return;
+  const observerOptions = {
+    threshold: 0.5,
+    rootMargin: '0px 0px -100px 0px'
+  };
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        startCounters();
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+  observer.observe(statsSection);
+  
+  function startCounters() {
+    const counters = statsSection.querySelectorAll('.stat-number-{{ section.id }}');
+    const duration = {{ section.settings.animation_duration }}; // ms
+    counters.forEach(counter => {
+      const target = parseFloat(counter.dataset.target.replace(/,/g, ''));
+      const prefix = counter.textContent.match(/^[^0-9]*/)?.[0] || '';
+      const suffix = counter.textContent.match(/[^0-9]*$/)?.[0] || '';
+      const startNumber = parseFloat(counter.textContent.replace(/[^0-9.]/g, '')) || 0;
+      const decimals = (counter.dataset.target.split('.')[1] || '').length;
+      let startTime = null;
+      
+      function updateCounter(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const current = startNumber + (target - startNumber) * progress;
+        let formattedNumber;
+        if (decimals > 0) {
+          formattedNumber = current.toFixed(decimals);
+        } else {
+          formattedNumber = Math.floor(current).toLocaleString();
+        }
+        counter.textContent = prefix + formattedNumber + suffix;
+        if (progress < 1) {
+          requestAnimationFrame(updateCounter);
+        }
+      }
+      requestAnimationFrame(updateCounter);
+    });
+  }
+});
+</script>
+
+{% schema %}
+{
+  "name": "Stats Counter",
+  "class": "section",
+  "max_blocks": 8,
+  "settings": [
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Section Heading",
+      "default": "Our Achievements"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "t:sections.all.heading_size.options__1.label"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.all.heading_size.options__2.label"
+        },
+        {
+          "value": "h0",
+          "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hxl",
+          "label": "t:sections.all.heading_size.options__4.label"
+        },
+        {
+          "value": "hxxl",
+          "label": "t:sections.all.heading_size.options__5.label"
+        }
+      ],
+      "default": "h1",
+      "label": "Heading size"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description",
+      "default": "<p>Numbers that speak for themselves</p>"
+    },
+    {
+      "type": "select",
+      "id": "content_align",
+      "options": [
+        {
+          "label": "left",
+          "value": "left"
+        },
+        {
+          "label": "center",
+          "value": "center"
+        },
+        {
+          "label": "right",
+          "value": "right"
+        }
+      ],
+      "default": "center",
+      "label": "Content Alignment"
+    },
+    {
+      "type": "header",
+      "content": "Columns Settings"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "label": "Columns on Desktop",
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "columns_tablet",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "label": "Columns on Tablet",
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "columns_mobile",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "label": "Columns on Mobile",
+      "default": 1
+    },
+    {
+      "type": "range",
+      "id": "column_gap",
+      "min": 0,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "label": "Column Gap",
+      "default": 30
+    },
+    {
+      "type": "header",
+      "content": "Number Styling"
+    },
+    {
+      "type": "range",
+      "id": "number_size",
+      "min": 24,
+      "max": 72,
+      "step": 2,
+      "unit": "px",
+      "label": "Number Size",
+      "default": 48
+    },
+    {
+      "type": "select",
+      "id": "number_weight",
+      "options": [
+        {
+          "value": "400",
+          "label": "Normal"
+        },
+        {
+          "value": "600",
+          "label": "Semi-bold"
+        },
+        {
+          "value": "700",
+          "label": "Bold"
+        },
+        {
+          "value": "800",
+          "label": "Extra bold"
+        }
+      ],
+      "default": "700",
+      "label": "Number Weight"
+    },
+    {
+      "type": "color",
+      "id": "number_color",
+      "label": "Number Color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "number_hover_color",
+      "label": "Number Hover Color",
+      "default": "#3a3a3a"
+    },
+    {
+      "type": "header",
+      "content": "Label Styling"
+    },
+    {
+      "type": "range",
+      "id": "label_size",
+      "min": 14,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Label Size",
+      "default": 16
+    },
+    {
+      "type": "select",
+      "id": "label_weight",
+      "options": [
+        {
+          "value": "400",
+          "label": "Normal"
+        },
+        {
+          "value": "500",
+          "label": "Medium"
+        },
+        {
+          "value": "600",
+          "label": "Semi-bold"
+        }
+      ],
+      "default": "500",
+      "label": "Label Weight"
+    },
+    {
+      "type": "select",
+      "id": "label_transform",
+      "options": [
+        {
+          "value": "none",
+          "label": "None"
+        },
+        {
+          "value": "uppercase",
+          "label": "Uppercase"
+        },
+        {
+          "value": "capitalize",
+          "label": "Capitalize"
+        }
+      ],
+      "default": "uppercase",
+      "label": "Label Transform"
+    },
+    {
+      "type": "color",
+      "id": "label_color",
+      "label": "Label Color",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "label_hover_color",
+      "label": "Label Hover Color",
+      "default": "#333333"
+    },
+    {
+      "type": "header",
+      "content": "Card Styling"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_color",
+      "label": "Card Background",
+      "default": "#f8f9fa"
+    },
+    {
+      "type": "color",
+      "id": "card_hover_bg_color",
+      "label": "Card Hover Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Animation"
+    },
+    {
+      "type": "range",
+      "id": "animation_duration",
+      "min": 1000,
+      "max": 5000,
+      "step": 100,
+      "unit": "ms",
+      "label": "Animation Duration",
+      "default": 2000
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top Padding",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom Padding",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top Padding (Mobile)",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom Padding (Mobile)",
+      "default": 40
+    }
+  ],
+  "blocks": [
+    {
+      "type": "stat",
+      "name": "Stat Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "prefix",
+          "label": "Prefix",
+          "info": "Text before number (e.g., $, €)"
+        },
+        {
+          "type": "text",
+          "id": "number",
+          "label": "Target Number",
+          "default": "2800",
+          "info": "Final number to count up to"
+        },
+        {
+          "type": "text",
+          "id": "suffix",
+          "label": "Suffix",
+          "info": "Text after number (e.g., +, %, °)"
+        },
+        {
+          "type": "text",
+          "id": "start_number",
+          "label": "Start Number",
+          "default": "0",
+          "info": "Number to start counting from"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "label",
+          "label": "Label",
+          "default": "Happy Customers"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "label-2",
+          "label": "Description",
+          "default": "Sports Frames Europe"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Stats Counter",
+      "blocks": [
+        {
+          "type": "stat",
+          "settings": {
+            "number": "2800",
+            "suffix": "+",
+            "start_number": "0",
+            "label": "Happy Customers"
+          }
+        },
+        {
+          "type": "stat",
+          "settings": {
+            "number": "4.9",
+            "suffix": "%",
+            "start_number": "0",
+            "label": "Customer Rating"
+          }
+        },
+        {
+          "type": "stat",
+          "settings": {
+            "number": "24",
+            "suffix": "hr",
+            "start_number": "0",
+            "label": "Fast Delivery"
+          }
+        },
+        {
+          "type": "stat",
+          "settings": {
+            "number": "100",
+            "suffix": "%",
+            "start_number": "0",
+            "label": "Guarantee"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

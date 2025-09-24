@@ -1,0 +1,561 @@
+{%- liquid
+  if section.blocks.size > 0
+    assign section_onboarding = false
+  else
+    assign section_onboarding = true
+  endif
+
+  assign size_opt_name = section.settings.size_option_name
+  if size_opt_name == blank
+    assign size_opt_name = 'Size'
+  endif
+
+  assign color_opt_name = section.settings.color_option_name
+  if color_opt_name == blank
+    assign color_opt_name = 'Color'
+  endif
+-%}
+
+{% style %}
+  .dynamic-section-{{ section.id }}{
+    --pt-m: {{ section.settings.padding_top_mobile }}px;
+    --pt-d: {{ section.settings.padding_top_desktop }}px;
+    --pb-m: {{ section.settings.padding_bottom_mobile }}px;
+    --pb-d: {{ section.settings.padding_bottom_desktop }}px;
+    padding-top: var(--pt-d);
+    padding-bottom: var(--pb-d);
+    background: {{ section.settings.background_color }};
+  }
+  @media (max-width:749px){
+    .dynamic-section-{{ section.id }}{ 
+      padding-top:var(--pt-m); 
+      padding-bottom:var(--pb-m); 
+    }
+  }
+
+  .vf-group{
+    margin:14px 0; 
+  }
+  .vf-label{ 
+    display:block; 
+    margin-bottom:6px; 
+    font-weight:600; 
+    color:#64748b; 
+  }
+
+  /* Custom dropdown (combobox) */
+  .vf-select{ 
+    position:relative;
+    max-width:420px; 
+  }
+  .vf-trigger{
+    width:100%; 
+    text-align:left; 
+    padding:10px 12px; 
+    border:1px solid #cbd5e1; 
+    background:#fff; 
+    border-radius:8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+  }
+  .vf-trigger[aria-expanded="true"]{ 
+    border-color:#d049d04a; 
+    /* box-shadow:0 0 0 2px rgba(14,165,233,.15);  */
+  }
+  .vf-trigger:disabled{ 
+    opacity:.55; cursor:not-allowed; 
+  }
+
+  .vf-menu{
+    position:absolute; 
+    left:0; 
+    right:0; 
+    z-index:30; 
+    margin-top:6px; 
+    background:#fff; 
+    border:1px solid #cbd5e1; 
+    border-radius:8px;
+    list-style:none; 
+    padding:6px; 
+    display:none; 
+    max-height:260px; 
+    overflow:auto;
+  }
+  .vf-select.is-open .vf-menu{ 
+    display:block; 
+  }
+  .vf-option > button{
+    display:block; 
+    width:100%; 
+    text-align:left; 
+    padding:8px 10px; 
+    border-radius:6px; 
+    border:none; 
+    background:transparent; 
+    cursor:pointer;
+    font-size: 14px;
+  }
+  .vf-option > button:hover{ 
+    background:#d049d03b; 
+  }
+  .vf-option.is-selected > button{ 
+    background: linear-gradient(135deg,#dc54dc,#830081);
+    color: #fff;
+  }
+  .vf-empty{ 
+    color:#94a3b8; 
+    font-style:italic; 
+    padding:8px 10px; 
+  }
+  .drop_arrow {
+    position: absolute;
+    right: 12px;
+    top: 10px;
+    display: flex;
+    transition: 0.5s;
+  }
+  .vf-select.is-open .drop_arrow {
+    transform: rotate(180deg);
+  }
+  .vf-select.is-disabled .drop_arrow {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+{% endstyle %}
+
+{%- comment -%}
+Build per-collection payload (detected option names, sizes, size↔color pairs)
+{%- endcomment -%}
+{%- assign payload = '' -%}
+{%- for block in section.blocks -%}
+  {%- if block.settings.collection != blank -%}
+    {%- assign c = collections[block.settings.collection] -%}
+
+    {%- assign detected_size_name = '' -%}
+    {%- assign detected_color_name = '' -%}
+
+    {%- for p in c.products -%}
+      {%- for opt in p.options -%}
+        {%- if detected_size_name == '' and opt == size_opt_name -%}{%- assign detected_size_name = opt -%}{%- endif -%}
+        {%- if detected_color_name == '' and opt == color_opt_name -%}{%- assign detected_color_name = opt -%}{%- endif -%}
+      {%- endfor -%}
+    {%- endfor -%}
+
+    {%- if detected_color_name == '' -%}
+      {%- for p in c.products -%}
+        {%- for opt in p.options -%}
+          {%- if opt == 'Color' or opt == 'Colour' -%}{%- assign detected_color_name = opt -%}{%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+    {%- endif -%}
+
+    {%- if detected_size_name == '' and detected_color_name != '' -%}
+      {%- for p in c.products -%}
+        {%- if p.options.size == 2 -%}
+          {%- for opt in p.options -%}
+            {%- if opt != detected_color_name -%}{%- assign detected_size_name = opt -%}{%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+
+    {%- assign size_name_for_url = detected_size_name -%}
+    {%- if size_name_for_url == '' -%}{%- assign size_name_for_url = size_opt_name -%}{%- endif -%}
+    {%- assign color_name_for_url = detected_color_name -%}
+    {%- if color_name_for_url == '' -%}{%- assign color_name_for_url = color_opt_name -%}{%- endif -%}
+
+    {%- assign size_vals_raw = '||' -%}
+    {%- assign pairs_json = '' -%}
+
+    {%- for p in c.products -%}
+      {%- assign idx_s = 0 -%}{%- assign idx_c = 0 -%}
+      {%- if p.options.size > 0 and p.options[0] == size_name_for_url -%}{%- assign idx_s = 1 -%}{%- endif -%}
+      {%- if p.options.size > 1 and p.options[1] == size_name_for_url -%}{%- assign idx_s = 2 -%}{%- endif -%}
+      {%- if p.options.size > 2 and p.options[2] == size_name_for_url -%}{%- assign idx_s = 3 -%}{%- endif -%}
+
+      {%- if p.options.size > 0 and p.options[0] == color_name_for_url -%}{%- assign idx_c = 1 -%}{%- endif -%}
+      {%- if p.options.size > 1 and p.options[1] == color_name_for_url -%}{%- assign idx_c = 2 -%}{%- endif -%}
+      {%- if p.options.size > 2 and p.options[2] == color_name_for_url -%}{%- assign idx_c = 3 -%}{%- endif -%}
+
+      {%- if idx_c == 0 and p.options.size == 2 and idx_s > 0 -%}
+        {%- if idx_s == 1 -%}{%- assign idx_c = 2 -%}{%- endif -%}
+        {%- if idx_s == 2 -%}{%- assign idx_c = 1 -%}{%- endif -%}
+      {%- endif -%}
+
+      {%- for v in p.variants -%}
+        {%- assign s_val = '' -%}{%- assign c_val = '' -%}
+        {%- if idx_s == 1 -%}{%- assign s_val = v.option1 -%}{%- endif -%}
+        {%- if idx_s == 2 -%}{%- assign s_val = v.option2 -%}{%- endif -%}
+        {%- if idx_s == 3 -%}{%- assign s_val = v.option3 -%}{%- endif -%}
+
+        {%- if idx_c == 1 -%}{%- assign c_val = v.option1 -%}{%- endif -%}
+        {%- if idx_c == 2 -%}{%- assign c_val = v.option2 -%}{%- endif -%}
+        {%- if idx_c == 3 -%}{%- assign c_val = v.option3 -%}{%- endif -%}
+
+        {%- if s_val != blank -%}
+          {%- capture s_token -%}||{{ s_val }}||{%- endcapture -%}
+          {%- unless size_vals_raw contains s_token -%}
+            {%- assign size_vals_raw = size_vals_raw | append: s_val | append: '||' -%}
+          {%- endunless -%}
+        {%- endif -%}
+
+        {%- if s_val != blank and c_val != blank -%}
+          {%- capture one_pair -%}{ "size": {{ s_val | json }}, "color": {{ c_val | json }} }{%- endcapture -%}
+          {%- if pairs_json != '' -%}
+            {%- assign pairs_json = pairs_json | append: ',' | append: one_pair -%}
+          {%- else -%}
+            {%- assign pairs_json = one_pair -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endfor -%}
+
+    {%- assign size_arr = size_vals_raw | split: '||' -%}
+    {%- capture sizes_json -%}[{%- assign first = true -%}{%- for v in size_arr -%}{%- unless v == '' -%}{%- if first -%}{%- assign first = false -%}{%- else -%},{%- endif -%}{{ v | json }}{%- endunless -%}{%- endfor -%}]{%- endcapture -%}
+
+    {%- assign title_value = block.settings.title | default: c.title -%}
+    {%- capture one_collection -%}
+      {
+        "url": {{ c.url | json }},
+        "title": {{ title_value | json }},
+        "sizeOptionName": {{ size_name_for_url | json }},
+        "colorOptionName": {{ color_name_for_url | json }},
+        "sizes": {{ sizes_json }},
+        "pairs": [{{ pairs_json }}]
+      }
+    {%- endcapture -%}
+
+    {%- if payload != '' -%}
+      {%- assign payload = payload | append: ',' | append: one_collection -%}
+    {%- else -%}
+      {%- assign payload = one_collection -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+
+<section data-section-id="{{ section.id }}" class="banner-section dynamic-section-{{ section.id }}">
+  <div class="container">
+    <div class="custom-advanced_filter-container">
+      <div class="custom-advanced_filter-content">
+        <h2>{{ section.settings.heading }} <span class="highlight-text">{{ section.settings.hightlight_heading }}</span></h2>
+        <div class="subhead">{{ section.settings.content }}</div>
+      </div>
+
+      <div class="custom-advanced_filter-box filter-form-{{ section.id }}">
+        <!-- Collection dropdown -->
+        <div class="vf-group">
+          <span class="vf-label">{{ section.settings.collection_label | default: 'Select collection' }}</span>
+          <div class="vf-select" id="vf-coll-{{ section.id }}" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+            <button class="vf-trigger" type="button" aria-expanded="false">Frame Type…</button>
+            <ul class="vf-menu" role="listbox">
+              {%- if section.blocks.size == 0 -%}
+                <li class="vf-empty">No collections configured</li>
+              {%- else -%}
+                {%- for block in section.blocks -%}
+                  {%- if block.settings.collection != blank -%}
+                    {%- assign c = collections[block.settings.collection] -%}
+                    {%- assign title_value = block.settings.title | default: c.title -%}
+                    <li class="vf-option" data-url="{{ c.url }}" role="option" aria-selected="false">
+                      <button type="button">{{ title_value }}</button>
+                    </li>
+                  {%- endif -%}
+                {%- endfor -%}
+              {%- endif -%}
+            </ul>
+            <span class="drop_arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- Size dropdown -->
+        <div class="vf-group">
+          <span class="vf-label">{{ size_opt_name }}</span>
+          <div class="vf-select is-disabled" id="vf-size-{{ section.id }}" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+            <button class="vf-trigger" type="button" aria-expanded="false" disabled>Select Size…</button>
+            <ul class="vf-menu" role="listbox"></ul>
+            <span class="drop_arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- Color dropdown -->
+        <div class="vf-group">
+          <span class="vf-label">{{ color_opt_name }}</span>
+          <div class="vf-select is-disabled" id="vf-color-{{ section.id }}" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+            <button class="vf-trigger" type="button" aria-expanded="false" disabled>Select Colour…</button>
+            <ul class="vf-menu" role="listbox"></ul>
+            <span class="drop_arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="vf-group">
+          <button type="button" class="gradient1 btn filter-submit">{{ section.settings.button | default: 'Search' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var DATA = { collections: [{{ payload }}] };
+
+  function uniq(arr){ var out=[]; (arr||[]).forEach(function(v){ if(v && out.indexOf(v)===-1) out.push(v); }); return out; }
+  function normalize(u){ return (u || '').replace(/\/+$/,''); }
+  function findCollectionByUrl(url){
+    var t = normalize(url);
+    return (DATA.collections||[]).find(function(c){ return normalize(c.url) === t; }) || null;
+  }
+
+  // Basic dropdown controller
+  function makeDropdown(root){
+    var trigger = root.querySelector('.vf-trigger');
+    var menu = root.querySelector('.vf-menu');
+    var value = '';
+
+    function close(){ root.classList.remove('is-open'); trigger.setAttribute('aria-expanded', 'false'); root.setAttribute('aria-expanded','false'); }
+    function open(){ if(trigger.disabled) return; root.classList.add('is-open'); trigger.setAttribute('aria-expanded','true'); root.setAttribute('aria-expanded','true'); }
+    function clearSelected(){
+      menu.querySelectorAll('.vf-option').forEach(function(li){ li.classList.remove('is-selected'); li.setAttribute('aria-selected','false'); });
+    }
+    function setLabel(text){ trigger.textContent = text || 'Choose…'; }
+    function setDisabled(disabled){
+      if(disabled){ root.classList.add('is-disabled'); trigger.disabled = true; close(); }
+      else{ root.classList.remove('is-disabled'); trigger.disabled = false; }
+    }
+    function setOptions(values){
+      menu.innerHTML = '';
+      if(!values || !values.length){
+        var li=document.createElement('li'); li.className='vf-empty'; li.textContent='No options'; menu.appendChild(li);
+        value = ''; setLabel('Choose…'); return;
+      }
+      values.forEach(function(val){
+        var li=document.createElement('li'); li.className='vf-option'; li.dataset.value = val.value || val;
+        if(val.url) li.dataset.url = val.url;
+        li.setAttribute('role','option'); li.setAttribute('aria-selected','false');
+        var b=document.createElement('button'); b.type='button'; b.textContent = val.label || val;
+        b.addEventListener('click', function(){
+          if(trigger.disabled) return;
+          clearSelected(); li.classList.add('is-selected'); li.setAttribute('aria-selected','true');
+          value = li.dataset.value || ''; setLabel(b.textContent); close();
+          root.dispatchEvent(new CustomEvent('change', { detail: { value: value, url: li.dataset.url || '' } }));
+        });
+        li.appendChild(b); menu.appendChild(li);
+      });
+      value = ''; setLabel('Choose…');
+    }
+    trigger.addEventListener('click', function(){ root.classList.contains('is-open') ? close() : open(); });
+    document.addEventListener('click', function(e){ if(!root.contains(e.target)) close(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
+
+    return {
+      setDisabled: setDisabled,
+      setOptions: setOptions,
+      getValue: function(){ return value; },
+      setValue: function(v){
+        var li = Array.prototype.find.call(menu.querySelectorAll('.vf-option'), function(n){ return (n.dataset.value||'') === v; });
+        clearSelected();
+        if(li){
+          li.classList.add('is-selected'); li.setAttribute('aria-selected','true');
+          value = v; setLabel(li.textContent.trim());
+        } else { value=''; setLabel('Choose…'); }
+      }
+    };
+  }
+
+  var form = document.querySelector(".filter-form-{{ section.id }}");
+  if(!form) return;
+
+  // Build dropdown instances
+  var ddColl = makeDropdown(document.getElementById("vf-coll-{{ section.id }}"));
+  var ddSize = makeDropdown(document.getElementById("vf-size-{{ section.id }}"));
+  var ddColor = makeDropdown(document.getElementById("vf-color-{{ section.id }}"));
+
+  // Initialize collection options from HTML list
+  (function hydrateCollections(){
+    var htmlLis = document.querySelectorAll("#vf-coll-{{ section.id }} .vf-menu .vf-option");
+    var opts = [];
+    htmlLis.forEach(function(li){
+      opts.push({ label: li.textContent.trim(), value: li.getAttribute('data-url'), url: li.getAttribute('data-url') });
+    });
+    ddColl.setOptions(opts);
+    ddSize.setOptions([]); ddSize.setDisabled(true);
+    ddColor.setOptions([]); ddColor.setDisabled(true);
+  })();
+
+  var state = { entry:null };
+
+  // When collection changes: load sizes, disable colors
+  document.getElementById("vf-coll-{{ section.id }}").addEventListener('change', function(ev){
+    var url = (ev.detail && ev.detail.url) || ev.detail.value || '';
+    var entry = findCollectionByUrl(url);
+    state.entry = entry || null;
+
+    ddSize.setOptions([]); ddSize.setDisabled(true);
+    ddColor.setOptions([]); ddColor.setDisabled(true);
+
+    if(!entry) return;
+
+    var sizes = uniq(entry.sizes || []);
+    ddSize.setOptions(sizes.map(function(s){ return { label:s, value:s }; }));
+    ddSize.setDisabled(!(sizes && sizes.length));
+  });
+
+  // When size changes: load allowed colors
+  document.getElementById("vf-size-{{ section.id }}").addEventListener('change', function(ev){
+    ddColor.setOptions([]); ddColor.setDisabled(true);
+    if(!state.entry) return;
+
+    var chosen = (ev.detail && ev.detail.value) || '';
+    if(!chosen) return;
+
+    var allowed = [];
+    (state.entry.pairs || []).forEach(function(p){ if(p && p.size === chosen && p.color) allowed.push(p.color); });
+    allowed = uniq(allowed);
+    ddColor.setOptions(allowed.map(function(c){ return { label:c, value:c }; }));
+    ddColor.setDisabled(!allowed.length);
+  });
+
+  function buildUrl(){
+    var base = (state.entry && state.entry.url) || (ddColl.getValue() || "/collections/all");
+    var params = [];
+    var sizeName = state.entry ? state.entry.sizeOptionName : "{{ size_opt_name }}";
+    var colorName = state.entry ? state.entry.colorOptionName : "{{ color_opt_name }}";
+    var sVal = ddSize.getValue();
+    var cVal = ddColor.getValue();
+    if (sVal) params.push("filter.v.option." + encodeURIComponent((sizeName||'').toLowerCase().trim()) + "=" + encodeURIComponent(sVal));
+    if (cVal) params.push("filter.v.option." + encodeURIComponent((colorName||'').toLowerCase().trim()) + "=" + encodeURIComponent(cVal));
+    return base + (params.length ? (base.indexOf("?")>-1?"&":"?") + params.join("&") : "");
+  }
+
+  var go = form.querySelector(".filter-submit");
+  if (go){ go.addEventListener('click', function(){ window.open(buildUrl()); }); }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Variant Filter Dependent",
+  "settings": [
+    { 
+      "id": "background_color", 
+      "type": "color", 
+      "label": "Background Color" },
+    { 
+      "type": "inline_richtext", 
+      "id": "heading", 
+      "label": "Heading", 
+      "default": "Heading" 
+    },
+    { 
+      "type": "inline_richtext", 
+      "id": "hightlight_heading", 
+      "label": "Hightlight Heading", 
+      "default": "Hightlight Heading" 
+    },
+    { 
+      "type": "richtext", 
+      "id": "content", 
+      "default": "<p>Write your content here....</p>", 
+      "label": "Content" 
+    },
+    { 
+      "type": "text", 
+      "id": "collection_label", 
+      "label": "Collection label", 
+      "default": "Select collection" 
+    },
+    { 
+      "type": "text", 
+      "id": "size_option_name", 
+      "label": "Size option name (must match product option)", 
+      "default": "Size" 
+    },
+    { 
+      "type": "text", 
+      "id": "color_option_name", 
+      "label": "Color option name (must match product option)", 
+      "default": "Color" 
+    },
+    { 
+      "type": "text", 
+      "id": "button", 
+      "label": "Button label", 
+      "default": "Search" 
+    },
+    { 
+      "id": "padding_top_mobile", 
+      "type": "range", 
+      "label": "Top padding (mobile)", 
+      "min": 0, 
+      "max": 60, 
+      "step": 10, 
+      "unit": "px", 
+      "default": 20 
+    },
+    { 
+      "id": "padding_top_desktop", 
+      "type": "range", 
+      "label": "Top padding (desktop)", 
+      "min": 0, 
+      "max": 60, 
+      "step": 10, 
+      "unit": "px", 
+      "default": 40 
+    },
+    { 
+      "id": "padding_bottom_mobile", 
+      "type": "range", 
+      "label": "Bottom padding (mobile)", 
+      "min": 0, 
+      "max": 60, 
+      "step": 10, 
+      "unit": "px", 
+      "default": 20 
+    },
+    { 
+      "id": "padding_bottom_desktop", 
+      "type": "range", 
+      "label": "Bottom padding (desktop)", 
+      "min": 0, 
+      "max": 60, 
+      "step": 10, 
+      "unit": "px", 
+      "default": 40
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "Collection",
+      "settings": [
+        { "type": "collection", 
+          "id": "collection", 
+          "label": "Choose collection" 
+        },
+        { "type": "text", 
+          "id": "title", 
+          "label": "Custom label (optional)"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    { 
+      "name": "Variant Filter Dependent" 
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,443 @@
+<style>
+.section-{{ section.id }}{
+background: {{ section.settings.bg_color }};
+}
+.section-{{ section.id }}-padding {
+padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+}
+
+@media screen and (min-width: 750px) {
+.section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top }}px;
+    padding-bottom: {{ section.settings.padding_bottom }}px;
+}
+}
+.testimonial-header h2 {
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #212c24;
+}
+.testimonial-rating-bar {
+  display: flex;
+  align-items: center;
+  justify-content: {% if section.settings.content_align == 'left' %}start{% elsif section.settings.content_align == 'center' %}center{% else %}end{% endif %};
+  gap: 8px;
+  margin-bottom: 30px;
+}
+.testimonial-stars .star {
+  color: #e1b44a;
+  font-size: 1.2em;
+}
+.testimonial-star-text {
+  margin-left: 8px;
+}
+.testimonial-swiper {
+  margin-bottom: 20px;
+  width: 100%;
+  padding: 15px 0 !important;
+}
+.swiper-wrapper {
+  align-items: stretch;
+}
+.swiper-slide {
+  display: flex;
+  height: auto;
+  justify-content: center;
+}
+.testimonial-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 0 0.5em #ededed;
+  padding: 24px;
+  text-align: left;
+  min-width: 260px;
+  max-width: 350px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0 auto;
+  height: 100%;
+  border: 1px solid #e7ebef;
+}
+.testimonial-card:hover {
+  box-shadow: 0 0 10px 0 #1669322e;
+}
+.testimonial-card .testimonial-stars .star {
+  color: #e1b44a;
+  font-size: 1.1em;
+  margin-bottom: 10px;
+}
+.testimonial-review {
+  font-size: 14px;
+  margin-bottom: 18px;
+  margin-top: 0px;
+  color: #465145;
+}
+.testimonial-meta {
+  font-size: 1em;
+  color: #1a1a1a;
+  border-top: 1px solid #ececec;
+  margin-top: auto;
+  padding-top: 10px;
+}
+.testimonial-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.testimonial-location {
+  font-size: 12px;
+  color: #697066;
+  margin-left: 5px;
+}
+.testimonial-footer {
+  background: #f5f2e7;
+  padding: 8px 18px;
+  border-radius: 24px;
+  color: hsl(140 15% 15%);
+  font-size: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 420px;
+  margin: auto;
+}
+.footer-star {
+  color: #e1b44a;
+  margin-right: 8px;
+}
+@media screen and (max-width: 600px) {
+  .testimonial-rating-bar {
+    flex-direction: column-reverse;
+  }
+}
+</style>
+
+<section class="section-{{ section.id }} section-{{ section.id }}-padding">
+  <div class="page-width center">
+    <div class="section_content-box testimonial-header {% if section.settings.content_align == 'left' %}left{% elsif section.settings.content_align == 'center' %}center{% else %}right{% endif %}">
+      <h2 class="title inline-richtext {{ section.settings.heading_size }}">{{ section.settings.heading }}</h2>
+      <div class="section-description subtitle">{{ section.settings.description }}</div>
+      <div class="testimonial-rating-bar">
+        {% if section.settings.show_stars %}
+          <span class="testimonial-stars">
+            {% for i in (1..5) %}
+              <span class="star">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star w-4 h-4 fill-accent text-accent" data-lov-id="src/components/Hero.tsx:64:18" data-lov-name="Star" data-component-path="src/components/Hero.tsx" data-component-line="64" data-component-file="Hero.tsx" data-component-name="Star" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20fill-accent%20text-accent%22%7D"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+              </span>
+            {% endfor %}
+          </span>
+        {% endif %}
+        <span class="testimonial-star-text">{{ section.settings.star_text }}</span>
+      </div>
+    </div>
+
+    <!-- Swiper Slider -->
+    <div class="swiper testimonial-swiper">
+      <div class="swiper-wrapper">
+        {% for block in section.blocks %}
+        <div class="swiper-slide testimonial-card" {{ block.shopify_attributes }}>
+          <div class="testimonial-stars">
+            {% for i in (1..block.settings.rating) %}
+              <span class="star">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star w-4 h-4 fill-accent text-accent" data-lov-id="src/components/Hero.tsx:64:18" data-lov-name="Star" data-component-path="src/components/Hero.tsx" data-component-line="64" data-component-file="Hero.tsx" data-component-name="Star" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20fill-accent%20text-accent%22%7D"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+              </span>
+            {% endfor %}
+          </div>
+          <p class="testimonial-review">{{ block.settings.review }}</p>
+          <div class="testimonial-meta">
+              <span class="testimonial-name">{{ block.settings.name }}</span>
+          </div>
+          {% if block.settings.location or block.settings.product %}
+            <span class="testimonial-location">
+              {{ block.settings.location }}{% if block.settings.location and block.settings.product %} • {% endif %}{{ block.settings.product }}
+            </span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if section.settings.show_pagination %}
+        <!-- Pagination (dots) -->
+        <div class="whistlestop-swiper-pagination testimonial-slider_pagination"></div>
+      {% endif %}
+
+      {% if section.settings.show_arrow %}
+        <!-- Navigation buttons -->
+        <div class="whistlestop-swiper-button whistlestop-swiper-button-next testimonial-slider_button-next">
+          {{ 'icon-right-arrow.svg' | inline_asset_content }}
+        </div>
+        <div class="whistlestop-swiper-button whistlestop-swiper-button-prev testimonial-slider_button-prev">
+          {{ 'icon-right-arrow.svg' | inline_asset_content }}
+        </div>
+      {% endif %}
+    </div>
+
+    {% if section.settings.footer_text != blank %}
+      <div class="testimonial-footer center">
+        <svg class="footer-star" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star w-4 h-4 fill-accent text-accent" data-lov-id="src/components/Hero.tsx:64:18" data-lov-name="Star" data-component-path="src/components/Hero.tsx" data-component-line="64" data-component-file="Hero.tsx" data-component-name="Star" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20fill-accent%20text-accent%22%7D"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>  
+        {{ section.settings.footer_text }}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Swiper JS and initialization -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var swiper = new Swiper('.testimonial-swiper', {
+      slidesPerView: {{ section.settings.slides_per_view_desktop }},
+      spaceBetween: 24,
+      navigation: {
+        nextEl: '.testimonial-slider_button-next',
+        prevEl: '.testimonial-slider_button-prev',
+      },
+      pagination: {
+        el: '.testimonial-slider_pagination',
+        clickable: true,
+      },
+      loop: {{ section.settings.loop }},
+      {% if section.settings.autoplay %}
+        autoplay: {
+          delay: {{ section.settings.autoplay_delay }},
+          disableOnInteraction: false,
+        },
+      {% endif %}
+      breakpoints: {
+        320: {
+          slidesPerView: {{ section.settings.slides_per_view_mobile }}.5,
+          spaceBetween: 8,
+        },
+        768: {
+          slidesPerView: {{ section.settings.slides_per_view_tablet }}.5,
+          spaceBetween: 16,
+        },
+        1024: {
+          slidesPerView: {{ section.settings.slides_per_view_desktop }}.5,
+          spaceBetween: 24,
+        }
+      }
+    });
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Testimonial Swiper",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background Color",
+      "default": "#fff"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Section Heading",
+      "default": "What Our Customers Say"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "t:sections.all.heading_size.options__1.label"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.all.heading_size.options__2.label"
+        },
+        {
+          "value": "h0",
+          "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hxl",
+          "label": "t:sections.all.heading_size.options__4.label"
+        },
+        {
+          "value": "hxxl",
+          "label": "t:sections.all.heading_size.options__5.label"
+        }
+      ],
+      "default": "h1",
+      "label": "t:sections.all.heading_size.label"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description",
+      "default": "<p>Join thousands of happy customers who have transformed their homes with our British travel art</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_stars",
+      "default": true,
+      "label": "Show Stars"
+    },
+    {
+      "type": "text",
+      "id": "star_text",
+      "label": "Star Text",
+      "default": "4.9 out of 5 from 2,500+ reviews"
+    },
+    {
+      "type": "select",
+      "id": "content_align",
+      "options": [
+        {
+          "label": "left",
+          "value": "left"
+        },
+        {
+          "label": "center",
+          "value": "center"
+        },
+        {
+          "label": "right",
+          "value": "right",
+        }
+      ],
+      "default": "left",
+      "label": "Content Alignment"
+    },
+    {
+      "type": "text",
+      "id": "footer_text",
+      "label": "Footer Text",
+      "default": "Trusted by over 10,000 customers across the UK"
+    },
+    {
+      "type": "range",
+      "id": "slides_per_view_desktop",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "default": 4,
+      "label": "Slides per view (desktop)"
+    },
+    {
+      "type": "range",
+      "id": "slides_per_view_tablet",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 2,
+      "label": "Slides per view (tablet)"
+    },
+    {
+      "type": "range",
+      "id": "slides_per_view_mobile",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 1,
+      "label": "Slides per view (mobile)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pagination",
+      "default": true,
+      "label": "Show Pagination Dots"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrow",
+      "default": true,
+      "label": "Show Navigation Arrow"
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Autoplay",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "autoplay_delay",
+      "min": 1000,
+      "max": 8000,
+      "step": 500,
+      "default": 3000,
+      "label": "Autoplay Delay (ms)"
+    },
+    {
+      "type": "checkbox",
+      "id": "loop",
+      "label": "Loop Slides",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ],
+  "blocks": [
+    {
+      "type": "testimonial",
+      "name": "Testimonial",
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "review",
+          "label": "Review Text"
+        },
+        {
+          "type": "text",
+          "id": "name",
+          "label": "Customer Name"
+        },
+        {
+          "type": "text",
+          "id": "location",
+          "label": "Location"
+        },
+        {
+          "type": "text",
+          "id": "product",
+          "label": "Product/Series"
+        },
+        {
+          "type": "range",
+          "id": "rating",
+          "label": "Star Rating",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 5
+        }
+      ]
+    }
+  ],
+  "max_blocks": 10,
+  "presets": [
+    {
+      "name": "Testimonial Swiper",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}

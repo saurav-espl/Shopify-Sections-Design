@@ -1,0 +1,768 @@
+<style>
+  .section-{{ section.id }}{
+    background: {{ section.settings.bg_color }};
+  }
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+ 
+  /* Grid layout (default) */
+  .collection-grid {
+    display: grid;
+    grid-template-columns: repeat({{ section.settings.columns_desktop }}, 1fr);
+    gap: 20px;
+  }
+  
+  @media (max-width: 989px) {
+    .collection-grid {
+      grid-template-columns: repeat({{ section.settings.columns_tablet }}, 1fr);
+    }
+  }
+  
+  @media (max-width: 749px) {
+    .collection-grid {
+      grid-template-columns: repeat({{ section.settings.columns_mobile }}, 1fr);
+    }
+  }
+    
+  .collection-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    aspect-ratio: 1/1;
+  }
+  
+  .collection-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .collection-item:hover .collection-image {
+    transform: scale(1.05);
+  }
+  
+  .collection-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgb(0 0 0), transparent);
+    padding: 40px 2px 15px 15px;
+    color: white;
+  }
+  
+  .collection-name {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+  .collection-product_cont {
+    font-size: 13px;
+  }
+</style>
+
+<section class="section-{{ section.id }} section-{{ section.id }}-padding" id="{{ section.settings.section_id }}">
+  <div class="page-width collection-section">
+    <div class="section_content-box {% if section.settings.content_align == 'left' %}left{% elsif section.settings.content_align == 'center' %}center{% else %}right{% endif %}">
+      <h2 class="{{ section.settings.heading_size }}">{{ section.settings.heading }}</h2>
+      <div class="section-description">{{ section.settings.description }}</div>
+    </div>
+    
+    {% if section.settings.enable_slider %}
+      <div class="collection-slider-{{ section.id }} swiper">
+        <div class="swiper-wrapper">
+          {% if section.settings.show_all_collections %}
+            {% for collection in collections %}
+              {% assign count = collection.all_products_count %}
+              {% assign display_count = count %}
+              
+              {% if count >= 2000 %}
+                {% assign display_count = '2000+' %}
+              {% elsif count >= 1900 %}
+                {% assign display_count = '1900+' %}
+              {% elsif count >= 1800 %}
+                {% assign display_count = '1800+' %}
+              {% elsif count >= 1700 %}
+                {% assign display_count = '1700+' %}
+              {% elsif count >= 1600 %}
+                {% assign display_count = '1600+' %}
+              {% elsif count >= 1500 %}
+                {% assign display_count = '1500+' %}
+              {% elsif count >= 1400 %}
+                {% assign display_count = '1400+' %}
+              {% elsif count >= 1300 %}
+                {% assign display_count = '1300+' %}
+              {% elsif count >= 1200 %}
+                {% assign display_count = '1200+' %}
+              {% elsif count >= 1100 %}
+                {% assign display_count = '1100+' %}
+              {% elsif count >= 1000 %}
+                {% assign display_count = '1000+' %}
+              {% elsif count >= 900 %}
+                {% assign display_count = '900+' %}
+              {% elsif count >= 800 %}
+                {% assign display_count = '800+' %}
+              {% elsif count >= 700 %}
+                {% assign display_count = '700+' %}
+              {% elsif count >= 600 %}
+                {% assign display_count = '600+' %}
+              {% elsif count >= 500 %}
+                {% assign display_count = '500+' %}
+              {% elsif count >= 450 %}
+                {% assign display_count = '450+' %}
+              {% elsif count >= 400 %}
+                {% assign display_count = '400+' %}
+              {% elsif count >= 350 %}
+                {% assign display_count = '350+' %}
+              {% elsif count >= 300 %}
+                {% assign display_count = '300+' %}
+              {% elsif count >= 250 %}
+                {% assign display_count = '250+' %}
+              {% elsif count >= 200 %}
+                {% assign display_count = '200+' %}
+              {% elsif count >= 150 %}
+                {% assign display_count = '150+' %}
+              {% elsif count >= 100 %}
+                {% assign display_count = '100+' %}
+              {% elsif count >= 50 %}
+                {% assign display_count = '50+' %}
+              {% else %}
+                {% assign display_count = count %}
+              {% endif %}
+              
+              <div class="swiper-slide">
+                <div class="collection-item">
+                  <a href="{{ collection.url }}">
+                    {% if collection.featured_image != blank %}
+                      <img 
+                        src="{{ collection.featured_image | image_url: width: 600 }}" 
+                        alt="{{ collection.title | escape }}" 
+                        class="collection-image"
+                        loading="lazy"
+                        width="600"
+                        height="600"
+                      >
+                    {% endif %}
+                    <div class="collection-overlay">
+                      <p class="collection-name">{{ collection.title }}</p>
+                      <span class="collection-product_cont">{{ display_count }} Frames</span>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            {% for block in section.blocks %}
+              {% assign collection = collections[block.settings.collection] %}
+              {% assign title = block.settings.title %}
+              {% assign image = block.settings.image | default: collection.featured_image %}
+
+              {% assign count = collection.all_products_count %}
+              {% assign display_count = count %}
+
+              {% if count >= 2000 %}
+                {% assign display_count = '2000+' %}
+              {% elsif count >= 1900 %}
+                {% assign display_count = '1900+' %}
+              {% elsif count >= 1800 %}
+                {% assign display_count = '1800+' %}
+              {% elsif count >= 1700 %}
+                {% assign display_count = '1700+' %}
+              {% elsif count >= 1600 %}
+                {% assign display_count = '1600+' %}
+              {% elsif count >= 1500 %}
+                {% assign display_count = '1500+' %}
+              {% elsif count >= 1400 %}
+                {% assign display_count = '1400+' %}
+              {% elsif count >= 1300 %}
+                {% assign display_count = '1300+' %}
+              {% elsif count >= 1200 %}
+                {% assign display_count = '1200+' %}
+              {% elsif count >= 1100 %}
+                {% assign display_count = '1100+' %}
+              {% elsif count >= 1000 %}
+                {% assign display_count = '1000+' %}
+              {% elsif count >= 900 %}
+                {% assign display_count = '900+' %}
+              {% elsif count >= 800 %}
+                {% assign display_count = '800+' %}
+              {% elsif count >= 700 %}
+                {% assign display_count = '700+' %}
+              {% elsif count >= 600 %}
+                {% assign display_count = '600+' %}
+              {% elsif count >= 500 %}
+                {% assign display_count = '500+' %}
+              {% elsif count >= 450 %}
+                {% assign display_count = '450+' %}
+              {% elsif count >= 400 %}
+                {% assign display_count = '400+' %}
+              {% elsif count >= 350 %}
+                {% assign display_count = '350+' %}
+              {% elsif count >= 300 %}
+                {% assign display_count = '300+' %}
+              {% elsif count >= 250 %}
+                {% assign display_count = '250+' %}
+              {% elsif count >= 200 %}
+                {% assign display_count = '200+' %}
+              {% elsif count >= 150 %}
+                {% assign display_count = '150+' %}
+              {% elsif count >= 100 %}
+                {% assign display_count = '100+' %}
+              {% elsif count >= 50 %}
+                {% assign display_count = '50+' %}
+              {% else %}
+                {% assign display_count = count %}
+              {% endif %}
+              
+              <div class="swiper-slide" {{ block.shopify_attributes }}>
+                <div class="collection-item">
+                  <a href="{{ collection.url }}">
+                    {% if image != blank %}
+                      <img 
+                        src="{{ image | image_url: width: 600 }}" 
+                        alt="{{ title | escape }}" 
+                        class="collection-image"
+                        loading="lazy"
+                        width="600"
+                        height="600"
+                      >
+                    {% endif %}
+                    <div class="collection-overlay">
+                      {% if title == blank %}
+                        <p class="collection-name">{{ collection.title }}</p>
+                        <span class="collection-product_cont">{{ display_count }} Frames</span>
+                      {% else %}
+                        <p class="collection-name">{{ title }}</p>
+                        <span class="collection-product_cont">{{ display_count }} Frames</span>
+                      {% endif %}
+                    </div>
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+        
+
+        {% if section.settings.show_pagination %}
+          <!-- Pagination (dots) -->
+          <div class="whistlestop-swiper-pagination collection-slider_pagination"></div>
+        {% endif %}
+
+        {% if section.settings.show_arrows %}
+          <!-- Navigation buttons -->
+          <div class="whistlestop-swiper-button whistlestop-swiper-button-next collection-slider_button-next">
+            {{ 'icon-right-arrow.svg' | inline_asset_content }}
+          </div>
+          <div class="whistlestop-swiper-button whistlestop-swiper-button-prev collection-slider_button-prev">
+            {{ 'icon-right-arrow.svg' | inline_asset_content }}
+          </div>
+        {% endif %}
+
+      </div>
+    {% else %}
+      <div class="collection-grid">
+        {% if section.settings.show_all_collections %}
+          {% for collection in collections %}
+            {% assign count = collection.all_products_count %}
+            {% assign display_count = count %}
+            
+            {% if count >= 2000 %}
+              {% assign display_count = '2000+' %}
+            {% elsif count >= 1900 %}
+              {% assign display_count = '1900+' %}
+            {% elsif count >= 1800 %}
+              {% assign display_count = '1800+' %}
+            {% elsif count >= 1700 %}
+              {% assign display_count = '1700+' %}
+            {% elsif count >= 1600 %}
+              {% assign display_count = '1600+' %}
+            {% elsif count >= 1500 %}
+              {% assign display_count = '1500+' %}
+            {% elsif count >= 1400 %}
+              {% assign display_count = '1400+' %}
+            {% elsif count >= 1300 %}
+              {% assign display_count = '1300+' %}
+            {% elsif count >= 1200 %}
+              {% assign display_count = '1200+' %}
+            {% elsif count >= 1100 %}
+              {% assign display_count = '1100+' %}
+            {% elsif count >= 1000 %}
+              {% assign display_count = '1000+' %}
+            {% elsif count >= 900 %}
+              {% assign display_count = '900+' %}
+            {% elsif count >= 800 %}
+              {% assign display_count = '800+' %}
+            {% elsif count >= 700 %}
+              {% assign display_count = '700+' %}
+            {% elsif count >= 600 %}
+              {% assign display_count = '600+' %}
+            {% elsif count >= 500 %}
+              {% assign display_count = '500+' %}
+            {% elsif count >= 450 %}
+              {% assign display_count = '450+' %}
+            {% elsif count >= 400 %}
+              {% assign display_count = '400+' %}
+            {% elsif count >= 350 %}
+              {% assign display_count = '350+' %}
+            {% elsif count >= 300 %}
+              {% assign display_count = '300+' %}
+            {% elsif count >= 250 %}
+              {% assign display_count = '250+' %}
+            {% elsif count >= 200 %}
+              {% assign display_count = '200+' %}
+            {% elsif count >= 150 %}
+              {% assign display_count = '150+' %}
+            {% elsif count >= 100 %}
+              {% assign display_count = '100+' %}
+            {% elsif count >= 50 %}
+              {% assign display_count = '50+' %}
+            {% else %}
+              {% assign display_count = count %}
+            {% endif %}
+            
+            <div class="collection-item">
+              <a href="{{ collection.url }}">
+                {% if collection.featured_image != blank %}
+                  <img 
+                    src="{{ collection.featured_image | image_url: width: 600 }}" 
+                    alt="{{ collection.title | escape }}" 
+                    class="collection-image"
+                    loading="lazy"
+                    width="600"
+                    height="600"
+                  >
+                {% endif %}
+                <div class="collection-overlay">
+                  <p class="collection-name">{{ collection.title }}</p>
+                  <span class="collection-product_cont">{{ display_count }} Frames</span>
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        {% else %}
+          {% for block in section.blocks %}
+            {% assign collection = collections[block.settings.collection] %}
+            {% assign title = block.settings.title %}
+            {% assign image = block.settings.image | default: collection.featured_image %}
+
+            {% assign count = collection.all_products_count %}
+            {% assign display_count = count %}
+
+            {% if count >= 2000 %}
+              {% assign display_count = '2000+' %}
+            {% elsif count >= 1900 %}
+              {% assign display_count = '1900+' %}
+            {% elsif count >= 1800 %}
+              {% assign display_count = '1800+' %}
+            {% elsif count >= 1700 %}
+              {% assign display_count = '1700+' %}
+            {% elsif count >= 1600 %}
+              {% assign display_count = '1600+' %}
+            {% elsif count >= 1500 %}
+              {% assign display_count = '1500+' %}
+            {% elsif count >= 1400 %}
+              {% assign display_count = '1400+' %}
+            {% elsif count >= 1300 %}
+              {% assign display_count = '1300+' %}
+            {% elsif count >= 1200 %}
+              {% assign display_count = '1200+' %}
+            {% elsif count >= 1100 %}
+              {% assign display_count = '1100+' %}
+            {% elsif count >= 1000 %}
+              {% assign display_count = '1000+' %}
+            {% elsif count >= 900 %}
+              {% assign display_count = '900+' %}
+            {% elsif count >= 800 %}
+              {% assign display_count = '800+' %}
+            {% elsif count >= 700 %}
+              {% assign display_count = '700+' %}
+            {% elsif count >= 600 %}
+              {% assign display_count = '600+' %}
+            {% elsif count >= 500 %}
+              {% assign display_count = '500+' %}
+            {% elsif count >= 450 %}
+              {% assign display_count = '450+' %}
+            {% elsif count >= 400 %}
+              {% assign display_count = '400+' %}
+            {% elsif count >= 350 %}
+              {% assign display_count = '350+' %}
+            {% elsif count >= 300 %}
+              {% assign display_count = '300+' %}
+            {% elsif count >= 250 %}
+              {% assign display_count = '250+' %}
+            {% elsif count >= 200 %}
+              {% assign display_count = '200+' %}
+            {% elsif count >= 150 %}
+              {% assign display_count = '150+' %}
+            {% elsif count >= 100 %}
+              {% assign display_count = '100+' %}
+            {% elsif count >= 50 %}
+              {% assign display_count = '50+' %}
+            {% else %}
+              {% assign display_count = count %}
+            {% endif %}
+            
+            <div class="collection-item" {{ block.shopify_attributes }}>
+              <a href="{{ collection.url }}">
+                {% if image != blank %}
+                  <img 
+                    src="{{ image | image_url: width: 600 }}" 
+                    alt="{{ title | escape }}" 
+                    class="collection-image"
+                    loading="lazy"
+                    width="600"
+                    height="600"
+                  >
+                {% endif %}
+                <div class="collection-overlay">
+                  {% if title == blank %}
+                    <p class="collection-name">{{ collection.title }}</p>
+                    <span class="collection-product_cont">{{ display_count }} Frames</span>
+                  {% else %}
+                    <p class="collection-name">{{ title }}</p>
+                    <span class="collection-product_cont">{{ display_count }} Frames</span>
+                  {% endif %}
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    {% endif %}
+    
+    {% if section.settings.button_label != blank %}
+      <div class="whistlestopprints-theme-btn">
+        <a href="{{ section.settings.button_link }}">{{ section.settings.button_label }}</a>
+        {{ 'icon-right-arrow.svg' | inline_asset_content }}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% if section.settings.enable_slider %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var swiper = new Swiper('.collection-slider-{{ section.id }}', {
+        slidesPerView: {{ section.settings.slides_per_view_desktop }},
+        spaceBetween: 24,
+        loop: {{ section.settings.loop }},
+        {% if section.settings.autoplay %}
+          autoplay: {
+            delay: {{ section.settings.autoplay_delay }},
+            disableOnInteraction: false,
+          },
+        {% endif %}
+        {% if section.settings.show_pagination %}
+          pagination: {
+            el: '.collection-slider_pagination',
+            clickable: true,
+          },
+        {% endif %}
+        {% if section.settings.show_arrows %}
+          navigation: {
+            nextEl: '.collection-slider_button-next',
+            prevEl: '.collection-slider_button-prev',
+          },
+        {% endif %}
+        breakpoints: {
+          320: {
+            slidesPerView: {{ section.settings.slides_per_view_mobile }}.5,
+            spaceBetween: 8,
+          },
+          768: {
+            slidesPerView: {{ section.settings.slides_per_view_tablet }}.5,
+            spaceBetween: 16,
+          },
+          1024: {
+            slidesPerView: {{ section.settings.slides_per_view_desktop }}.5,
+            spaceBetween: 24,
+          }
+        }
+      });
+    });
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Collection Grid",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_id",
+      "label": "Add Custom Section ID",
+      "default": "section-name"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background Color",
+      "default": "#fff"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Shop by collection",
+      "label": "Heading"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "options": [
+        {
+          "value": "h2",
+          "label": "t:sections.all.heading_size.options__1.label"
+        },
+        {
+          "value": "h1",
+          "label": "t:sections.all.heading_size.options__2.label"
+        },
+        {
+          "value": "h0",
+          "label": "t:sections.all.heading_size.options__3.label"
+        },
+        {
+          "value": "hxl",
+          "label": "t:sections.all.heading_size.options__4.label"
+        },
+        {
+          "value": "hxxl",
+          "label": "t:sections.all.heading_size.options__5.label"
+        }
+      ],
+      "default": "h1",
+      "label": "t:sections.all.heading_size.label"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "default": "<p>Explore prints from Britain's most beloved destinations</p>",
+      "label": "Description"
+    },
+    {
+      "type": "select",
+      "id": "content_align",
+      "options": [
+        {
+          "label": "left",
+          "value": "left"
+        },
+        {
+          "label": "center",
+          "value": "center"
+        },
+        {
+          "label": "right",
+          "value": "right",
+        }
+      ],
+      "default": "left",
+      "label": "Content Alignment"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_all_collections",
+      "label": "Show All Collections",
+      "default": false,
+      "info": "When enabled, all collections will be displayed automatically"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 4,
+      "label": "Columns on desktop"
+    },
+    {
+      "type": "range",
+      "id": "columns_tablet",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 2,
+      "label": "Columns on tablet"
+    },
+    {
+      "type": "range",
+      "id": "columns_mobile",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 1,
+      "label": "Columns on mobile"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "default": "View All collections",
+      "label": "Button label"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Slider Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "Enable Slider",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "slides_per_view_desktop",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 4,
+      "label": "Slides per view (Desktop)"
+    },
+    {
+      "type": "range",
+      "id": "slides_per_view_tablet",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 2,
+      "label": "Slides per view (Tablet)"
+    },
+    {
+      "type": "range",
+      "id": "slides_per_view_mobile",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 1,
+      "label": "Slides per view (Mobile)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "Show Navigation Arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pagination",
+      "label": "Show Pagination Dots",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Autoplay",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "autoplay_delay",
+      "min": 1000,
+      "max": 8000,
+      "step": 500,
+      "default": 3000,
+      "label": "Autoplay Delay (ms)"
+    },
+    {
+      "type": "checkbox",
+      "id": "loop",
+      "label": "Loop Slides",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "collection",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "collection name",
+          "default": "Yorkshire"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Custom image"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collection Grid",
+      "blocks": [
+        {
+          "type": "collection",
+          "settings": {
+            "title": "Collection Name"
+          }
+        },
+        {
+          "type": "collection",
+          "settings": {
+            "title": "Collection Name"
+          }
+        },
+        {
+          "type": "collection",
+          "settings": {
+            "title": "Collection Name"
+          }
+        },
+        {
+          "type": "collection",
+          "settings": {
+            "title": "Collection Name"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
