@@ -1,0 +1,37 @@
+{% comment %}
+  card-product-render.liquid
+  --------------------------
+  Used only for AJAX rendering of product cards for the Recently Viewed Products section.
+
+  Functionality:
+  - Fetches a product by its handle from the URL.
+  - Renders the product using the 'card-product' snippet.
+  - Used by the recently-viewed section to dynamically inject product cards via JavaScript.
+
+  Requirements:
+  - The 'card-product' snippet must exist in your theme.
+  - The section using this snippet should pass the section.id to maintain unique IDs for styling.
+  - The Recently Viewed Products section fetches HTML from this snippet dynamically:
+    `/products/{handle}?section_id=card-product-render`
+  - This allows products to be displayed without a full page reload.
+  - Can be reused for other AJAX-based product rendering in your theme if needed.
+
+  Notes:
+  - Do NOT include this snippet directly in templates; it is meant for AJAX rendering only.
+  - Make sure any theme that uses this snippet also has the 'card-product' snippet available.
+{% endcomment %}
+
+{% assign path_parts = request.path | split: '/' %}
+{% assign handle = path_parts.last %}
+{% assign product = all_products[handle] %}
+
+{% if product %}
+  <div class="recently-viewed__item">
+    {% render 'card-product',
+      card_product: product,
+      media_size: 'square',
+      show_secondary_image: true,
+      section_id: section.id
+    %}
+  </div>
+{% endif %}

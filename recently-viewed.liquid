@@ -1,0 +1,361 @@
+{% comment %}
+  Recently Viewed Products Section — with Swiper Slider integration.
+
+  Instructions:
+
+  1. File Creation:
+     - Create a new section file in your Shopify theme:
+       /sections/recently-viewed-products.liquid
+     - Copy the full code of this section into that file.
+
+  2. Product Card Rendering:
+     - This section uses Shopify's AJAX rendering to display products.
+     - Make sure your theme has the `card-product-render` snippet/section (usually provided in Dawn theme).
+     - The section fetches product HTML dynamically from:
+       `/products/{handle}?section_id=card-product-render`
+     - Without `card-product-render`, the products will not display properly.
+
+  3. Usage in Theme:
+     - Go to Shopify Admin > Online Store > Themes > Customize.
+     - Add this section on the Product page (or wherever you want it to appear).
+
+  4. Reusing in Another Theme:
+     - Copy the section file (recently-viewed-products.liquid) to the /sections/ folder of the new theme.
+     - Make sure the new theme has both:
+       a) `card-product` snippet
+       b) `card-product-render` snippet/section
+     - Include Swiper CSS & JS if not already present.
+     - Add the section in the new theme via Theme Editor, like in the original theme.
+
+  Notes:
+  - This section tracks recently viewed products using `localStorage`.
+  - Slider works on both desktop and mobile if enabled.
+  - Section hides automatically if no recently viewed products exist.
+{% endcomment %}
+
+
+
+<style>
+  .section-{{ section.id }} {
+    background: {{ section.settings.background_color }};
+  }
+
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  .recently-viewed__heading {
+    text-align: {{ section.settings.heading_alignment }};
+    margin-bottom: 2rem;
+  }
+
+  .recently-viewed__swiper {
+    position: relative;
+    padding-bottom: 30px;
+  }
+
+  .recently-viewed__grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat({{ section.settings.products_per_row_desktop }}, 1fr);
+  }
+
+  @media screen and (max-width: 767px) {
+    .recently-viewed__grid {
+      grid-template-columns: repeat({{ section.settings.products_per_row_mobile }}, 1fr);
+    }
+  }
+
+  .recently-viewed__slide {
+    height: auto;
+  }
+
+  .recently-viewed__nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background-color: rgb(237 113 56);
+    border: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50px;
+  }
+
+  .recently-viewed__nav-btn--prev { left: 10px; }
+  .recently-viewed__nav-btn--next { right: 10px; }
+  .recently-viewed__nav-btn--prev svg {
+    rotate: 180deg;
+  }
+  .recently-viewed__nav-btn svg {
+    color: #fff;
+  }
+
+  .recently-viewed__pagination {
+    text-align: center;
+    bottom: -5px !important;
+  }
+
+  .recently-viewed__pagination .swiper-pagination-bullet {
+    height: 10px;
+    width: 10px;
+    background: none;
+    border: 2px solid #ed7138;
+    opacity: 1;
+    transition: 0.5s ease all;
+  }
+
+  .recently-viewed__pagination .swiper-pagination-bullet-active {
+    width: 35px !important;
+    border-radius: 10px;
+    background: #ed7138 !important;
+  }
+</style>
+
+<section id="recently-viewed-{{ section.id }}" class="recently-viewed-section section-{{ section.id }} section-{{ section.id }}-padding">
+  <div class="page-width">
+    {% if section.settings.heading != blank %}
+      <div class="recently-viewed__heading">
+        <h2 class="after_underline-title related-products__heading inline-richtext h1">
+          {{ section.settings.heading }}
+        </h2>
+      </div>
+    {% endif %}
+
+    {% if section.settings.enable_slider %}
+      <div class="swiper recently-viewed__swiper">
+        <div class="swiper-wrapper" id="recently-viewed-grid-{{ section.id }}">
+          <!-- Products dynamically injected here -->
+        </div>
+
+        {% if section.settings.show_arrows %}
+          <button class="recently-viewed__nav-btn recently-viewed__nav-btn--prev" aria-label="Previous">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </button>
+          <button class="recently-viewed__nav-btn recently-viewed__nav-btn--next" aria-label="Next">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </button>
+        {% endif %}
+
+        {% if section.settings.show_pagination %}
+          <div class="swiper-pagination recently-viewed__pagination"></div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="recently-viewed__grid" id="recently-viewed-grid-{{ section.id }}"></div>
+    {% endif %}
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const productHandle = {{ product.handle | json }};
+      const maxProducts = {{ section.settings.max_products | json }};
+      const enableSlider = {{ section.settings.enable_slider | json }};
+      const storageKey = 'recentlyViewedProducts';
+      let viewed = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+      if (productHandle && !viewed.includes(productHandle)) {
+        viewed.unshift(productHandle);
+      }
+
+      viewed = viewed.slice(0, maxProducts);
+      localStorage.setItem(storageKey, JSON.stringify(viewed));
+
+      const grid = document.getElementById('recently-viewed-grid-{{ section.id }}');
+      const filtered = viewed.filter(h => h !== productHandle);
+
+      if (filtered.length === 0) {
+        document.getElementById('recently-viewed-{{ section.id }}').style.display = 'none';
+        return;
+      }
+
+      Promise.all(
+        filtered.map(handle =>
+          fetch(`/products/${handle}?section_id=card-product-render`).then(res => res.text())
+        )
+      )
+      .then(htmlArray => {
+        htmlArray.forEach(html => {
+          const wrapper = document.createElement('div');
+          wrapper.className = enableSlider
+            ? 'swiper-slide recently-viewed__slide'
+            : 'recently-viewed__item';
+          wrapper.innerHTML = html;
+          grid.appendChild(wrapper);
+        });
+
+        if (enableSlider) {
+          initSwiper();
+        }
+      })
+      .catch(console.error);
+
+      function initSwiper() {
+        new Swiper('#recently-viewed-{{ section.id }} .swiper', {
+          slidesPerView: {{ section.settings.products_per_row_desktop }},
+          spaceBetween: 20,
+          loop: {{ section.settings.enable_loop | json }},
+          navigation: {
+            nextEl: '#recently-viewed-{{ section.id }} .recently-viewed__nav-btn--next',
+            prevEl: '#recently-viewed-{{ section.id }} .recently-viewed__nav-btn--prev',
+          },
+          pagination: {
+            el: '#recently-viewed-{{ section.id }} .swiper-pagination',
+            clickable: true,
+          },
+          autoplay: {{ section.settings.autoplay | json }} ? {
+            delay: {{ section.settings.autoplay_delay }},
+            disableOnInteraction: false
+          } : false,
+          breakpoints: {
+            0: {
+              slidesPerView: {{ section.settings.products_per_row_mobile }},
+            },
+            768: {
+              slidesPerView: {{ section.settings.products_per_row_desktop }},
+            }
+          }
+        });
+      }
+    });
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Recently Viewed",
+  "settings": [
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Section Heading",
+      "default": "Recently Viewed"
+    },
+    {
+      "type": "range",
+      "id": "max_products",
+      "label": "Max number of products",
+      "min": 2,
+      "max": 10,
+      "step": 1,
+      "default": 6
+    },
+    {
+      "type": "range",
+      "id": "products_per_row_desktop",
+      "label": "Products Per Row (desktop)",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "products_per_row_mobile",
+      "label": "Products Per Row (mobile)",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 1
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "Enable slider",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "Show navigation arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pagination",
+      "label": "Show pagination dots",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Enable autoplay",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "autoplay_delay",
+      "label": "Autoplay delay (ms)",
+      "min": 1000,
+      "max": 9000,
+      "step": 500,
+      "default": 4000
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_loop",
+      "label": "Loop slides",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Heading alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Top Padding",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom Padding",
+      "default": 36
+    }
+  ],
+  "presets": [
+    {
+      "name": "Recently Viewed",
+      "category": "Products"
+    }
+  ]
+}
+{% endschema %}

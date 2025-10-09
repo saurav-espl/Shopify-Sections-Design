@@ -1,0 +1,2079 @@
+<style>
+.product-comparison .comparison-row {
+  display: flex;
+  justify-content: {{ section.settings.comparison_alignment | default: 'flex-start' }};
+}
+
+.product-item {
+  border: 1px solid {{ section.settings.product_border_color | default: '#ddd' }};
+  padding: {{ section.settings.product_padding | default: '20px' }};
+  text-align: center;
+  position: relative;
+  transition: transform 0.3s ease;
+  flex: 1;
+  min-width: {{ section.settings.product_min_width | default: '200px' }};
+  max-width: {{ section.settings.product_max_width | default: '250px' }};
+  background-color: {{ section.settings.product_bg_color | default: 'transparent' }};
+  border-radius: {{ section.settings.product_border_radius | default: '0px' }};
+}
+
+.product-item:hover {
+  transform: scale({{ section.settings.product_hover_scale | default: '1.05' }});
+  box-shadow: 0 0 {{ section.settings.product_hover_shadow | default: '10px' }} rgba(0, 0, 0, 0.1);
+}
+
+.product-item .current {
+  border: 2px solid {{ section.settings.current_product_border_color | default: 'green' }};
+}
+
+.view-product-button {
+  display: inline-block;
+  margin-top: 10px;
+  background-color: {{ section.settings.button_bg_color | default: '#4CAF50' }};
+  color: {{ section.settings.button_text_color | default: 'white' }};
+  padding: {{ section.settings.button_padding | default: '10px 20px' }};
+  text-decoration: none;
+  border-radius: {{ section.settings.button_border_radius | default: '5px' }};
+  font-size: {{ section.settings.button_font_size | default: '14px' }};
+  border: {{ section.settings.button_border | default: 'none' }};
+}
+
+.view-product-button:hover {
+  background-color: {{ section.settings.button_hover_bg_color | default: '#45a049' }};
+  color: {{ section.settings.button_hover_text_color | default: 'white' }};
+}
+
+.product-item .current-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: {{ section.settings.current_label_bg_color | default: 'green' }};
+  color: {{ section.settings.current_label_text_color | default: 'white' }};
+  padding: 5px;
+  font-size: 12px;
+  border-radius: {{ section.settings.current_label_border_radius | default: '0px' }};
+}
+
+/* Modal Styling */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, {{ section.settings.modal_overlay_opacity | default: '0.5' }});
+}
+
+.modal-content {
+  background-color: {{ section.settings.modal_bg_color | default: '#fefefe' }};
+  margin: 5% auto;
+  padding: {{ section.settings.modal_padding | default: '20px' }};
+  border: 1px solid #888;
+  width: 90%;
+  max-width: {{ section.settings.modal_max_width | default: '800px' }};
+  border-radius: {{ section.settings.modal_border_radius | default: '8px' }};
+  position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.close {
+  color: {{ section.settings.close_button_color | default: '#aaa' }};
+  font-size: {{ section.settings.close_button_size | default: '28px' }};
+  font-weight: bold;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.close:hover,
+.close:focus {
+  color: {{ section.settings.close_button_hover_color | default: 'black' }};
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.product-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+  padding: {{ section.settings.modal_product_padding | default: '10px' }};
+  border: 1px solid {{ section.settings.modal_product_border_color | default: '#eee' }};
+  border-radius: {{ section.settings.modal_product_border_radius | default: '5px' }};
+  background: {{ section.settings.modal_product_bg_color | default: 'white' }};
+}
+
+.product-option button {
+  margin-top: 10px;
+  background-color: {{ section.settings.modal_button_bg_color | default: '#4CAF50' }};
+  color: {{ section.settings.modal_button_text_color | default: 'white' }};
+  padding: {{ section.settings.modal_button_padding | default: '8px 16px' }};
+  border: none;
+  cursor: pointer;
+  border-radius: {{ section.settings.modal_button_border_radius | default: '4px' }};
+  font-size: {{ section.settings.modal_button_font_size | default: '14px' }};
+}
+
+.product-option button:hover {
+  background-color: {{ section.settings.modal_button_hover_bg_color | default: '#45a049' }};
+}
+
+.product-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax({{ section.settings.modal_product_min_width | default: '150px' }}, 1fr));
+  gap: {{ section.settings.modal_grid_gap | default: '15px' }};
+  margin-top: 20px;
+}
+
+#open-modal-button {
+  background-color: {{ section.settings.open_modal_button_bg_color | default: '#007bff' }};
+  color: {{ section.settings.open_modal_button_text_color | default: 'white' }};
+  border: none;
+  padding: {{ section.settings.open_modal_button_padding | default: '10px 20px' }};
+  border-radius: {{ section.settings.open_modal_button_border_radius | default: '4px' }};
+  cursor: pointer;
+  margin-top: 20px;
+  font-size: {{ section.settings.open_modal_button_font_size | default: '16px' }};
+}
+
+#open-modal-button:hover {
+  background-color: {{ section.settings.open_modal_button_hover_bg_color | default: '#0056b3' }};
+}
+
+.remove-product {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: {{ section.settings.remove_button_bg_color | default: '#ff4444' }};
+  color: {{ section.settings.remove_button_text_color | default: 'white' }};
+  border: none;
+  border-radius: 50%;
+  width: {{ section.settings.remove_button_size | default: '24px' }};
+  height: {{ section.settings.remove_button_size | default: '24px' }};
+  cursor: pointer;
+  font-size: {{ section.settings.remove_button_font_size | default: '14px' }};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-product:hover {
+  background: {{ section.settings.remove_button_hover_bg_color | default: '#cc0000' }};
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.comparison-table th, .comparison-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.comparison-table th {
+  background-color: #f2f2f2;
+}
+
+.comparison-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.product-option img {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: {{ section.settings.product_image_border_radius | default: '0px' }};
+}
+
+/* Search and Pagination Styles */
+.search-container {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+#product-search {
+  width: 100%;
+  padding: {{ section.settings.search_padding | default: '10px 40px 10px 15px' }};
+  border: 1px solid {{ section.settings.search_border_color | default: '#ddd' }};
+  border-radius: {{ section.settings.search_border_radius | default: '4px' }};
+  font-size: {{ section.settings.search_font_size | default: '16px' }};
+  background-color: {{ section.settings.search_bg_color | default: 'white' }};
+  color: {{ section.settings.search_text_color | default: 'inherit' }};
+}
+
+.search-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: {{ section.settings.search_icon_color | default: '#777' }};
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+}
+
+.pagination-info {
+  text-align: center;
+  margin: 15px 0;
+  color: #666;
+  font-size: {{ section.settings.pagination_font_size | default: '14px' }};
+}
+
+.load-more-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+#load-more-button {
+  background-color: {{ section.settings.load_more_button_bg_color | default: '#007bff' }};
+  color: {{ section.settings.load_more_button_text_color | default: 'white' }};
+  border: none;
+  padding: {{ section.settings.load_more_button_padding | default: '10px 20px' }};
+  border-radius: {{ section.settings.load_more_button_border_radius | default: '4px' }};
+  cursor: pointer;
+  font-size: {{ section.settings.load_more_button_font_size | default: '16px' }};
+}
+
+#load-more-button:hover {
+  background-color: {{ section.settings.load_more_button_hover_bg_color | default: '#0056b3' }};
+}
+
+#load-more-button:disabled {
+  background-color: {{ section.settings.load_more_button_disabled_bg_color | default: '#cccccc' }};
+  cursor: not-allowed;
+}
+
+.metafield-value {
+  margin-top: 5px;
+  font-size: {{ section.settings.metafield_value_font_size | default: '14px' }};
+  color: {{ section.settings.metafield_value_color | default: '#555' }};
+}
+
+.metafield-label {
+  font-weight: bold;
+  margin-top: 10px;
+  font-size: {{ section.settings.metafield_label_font_size | default: '14px' }};
+  color: {{ section.settings.metafield_label_color | default: 'inherit' }};
+}
+
+.no-products {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+}
+
+/* Modal heading styling */
+#modal-heading {
+  text-align: {{ section.settings.heading_alignment | default: 'left' }};
+  color: {{ section.settings.modal_heading_color | default: 'inherit' }};
+  font-size: {{ section.settings.modal_heading_font_size | default: '24px' }};
+  margin-bottom: {{ section.settings.modal_heading_margin_bottom | default: '20px' }};
+}
+
+/* Product title styling in modal */
+.product-option p {
+  color: {{ section.settings.modal_product_title_color | default: 'inherit' }};
+  font-size: {{ section.settings.modal_product_title_font_size | default: '14px' }};
+}
+
+/* Product price styling in modal */
+.product-option p:nth-child(3) {
+  color: {{ section.settings.modal_product_price_color | default: '#333' }};
+  font-size: {{ section.settings.modal_product_price_font_size | default: '14px' }};
+}
+
+/* New styles for added functionality */
+.add-to-comparison.added {
+  background-color: #6c757d;
+  cursor: default;
+}
+
+.add-to-comparison.added:hover {
+  background-color: #6c757d;
+}
+
+.change-product-button {
+  background-color: #ffc107;
+  color: #212529;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.change-product-button:hover {
+  background-color: #e0a800;
+}
+
+.change-modal .product-option {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.change-modal .product-option:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.change-modal .product-option.selected {
+  border: 2px solid #007bff;
+  background-color: #f8f9fa;
+}
+
+.change-modal-heading {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.product-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+/* New Design Styles Based on Image */
+.product-card {
+  border: 1px solid #e0e0e0;
+  padding: 16px;
+  background: white;
+  position: relative;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card.current {
+  border-color: #4CAF50;
+  border-width: 2px;
+}
+
+.product-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #4CAF50;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.product-image {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  margin: 0 auto 16px;
+}
+
+.product-code {
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.product-model {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.product-specs {
+  margin: 16px 0;
+  text-align: left;
+}
+
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.spec-label {
+  font-weight: bold;
+  color: #333;
+}
+
+.spec-value {
+  color: #666;
+}
+
+.product-actions-new {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-view {
+  background: {{ section.settings.button_bg_color }};
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-change {
+  background: {{ section.settings.change_btn_bg }};
+  color: {{ section.settings.change_btn_color }};
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-view:hover {
+  background: {{ section.settings.button_hover_bg_color }};
+}
+
+.btn-change:hover {
+  background: {{ section.settings.change_btn_hover }};
+}
+
+.comparison-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.comparison-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.comparison-subtitle {
+  color: #666;
+  font-size: 16px;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: {{ section.settings.remove_btn_bg }};
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.remove-btn:hover {
+  background:  {{ section.settings.remove_btn_hover }};
+}
+</style>
+
+<section class="product-comparison">
+  <div class="container">
+    <div class="comparison-header">
+      <h1 class="comparison-title">{{ section.settings.heading }}</h1>
+      <p class="comparison-subtitle">{{ section.settings.subheading }}</p>
+    </div>
+    <div class="flex">
+        <div class="product-table-view product-card">
+          <div class="porduct-empty-name"> Product</div>
+          <div class="metafield-lables product-specs">
+            {% for block in section.blocks %}
+              {% if block.settings.label %}
+                <span class="spec-row">{{ block.settings.label }}</span>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        <div class="comparison-row" id="comparison-container">
+          <!-- Current product will be added here by JavaScript -->
+        </div>
+    </div>
+    <button id="open-modal-button">+ Add Product to Compare</button>
+
+    <!-- Modal Popup for Product Selection -->
+    <div id="product-selection-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modal-heading">Select Products for Comparison</h2>
+        
+        <!-- Search Bar -->
+        <div class="search-container">
+          <input type="text" id="product-search" placeholder="Search products by name...">
+          <span class="search-icon">🔍</span>
+        </div>
+        
+        <div class="product-list" id="product-selection-list">
+          <!-- Products will be loaded here by JavaScript -->
+        </div>
+        
+        <!-- Pagination Info -->
+        <div class="pagination-info" id="pagination-info"></div>
+        
+        <!-- Load More Button -->
+        <div class="load-more-container">
+          <button id="load-more-button">Load More Products</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Popup for Product Replacement -->
+    <div id="product-change-modal" class="modal change-modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 class="change-modal-heading">Select a Replacement Product</h2>
+        
+        <!-- Search Bar -->
+        <div class="search-container">
+          <input type="text" id="change-product-search" placeholder="Search products by name...">
+          <span class="search-icon">🔍</span>
+        </div>
+        
+        <div class="product-list" id="product-change-list">
+          <!-- Products will be loaded here by JavaScript -->
+        </div>
+        
+        <!-- Pagination Info -->
+        <div class="pagination-info" id="change-pagination-info"></div>
+        
+        <!-- Load More Button -->
+        <div class="load-more-container">
+          <button id="change-load-more-button">Load More Products</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Preload products data with metafields using Liquid -->
+<script type="application/json" id="AllProductsData">
+{
+  "products": [
+    {%- comment -%} Get products from selected collection or all products {%- endcomment -%}
+    {%- assign selected_collection = section.settings.collection_handle -%}
+    
+    {%- if selected_collection != blank -%}
+      {%- assign product_collection = collections[selected_collection] -%}
+      {%- assign products_to_show = product_collection.products -%}
+      {%- comment -%} Products from selected collection {%- endcomment -%}
+      {%- for product in products_to_show -%}
+        {
+          "id": {{ product.id | json }},
+          "title": {{ product.title | json }},
+          "handle": {{ product.handle | json }},
+          "price": {{ product.price | money | json }},
+          "url": {{ product.url | json }},
+          "vendor": {{ product.vendor | json }},
+          "type": {{ product.type | json }},
+          "variants": {{ product.variants | json }},
+          "featured_image": {
+            "src": {{ product.featured_image | img_url: 'medium' | json }}
+          },
+          "images": {{ product.images | json }},
+          "metafields": {
+           {%- for block in section.blocks -%}
+              {%- if block.type == "metafield" -%}
+                {%- assign namespace = block.settings.namespace -%}
+                {%- assign key = block.settings.key -%}
+                {%- assign metafield_raw = product.metafields[namespace][key] | default: '' -%}
+                {% assign meta_type = product.metafields[namespace][key].type %}
+                {%- assign display_value = metafield_raw | escape -%}
+                {% if meta_type == 'volume' %}
+                  {%- assign after_value = metafield_raw | split: '"value":' | last | strip -%}
+                  {%- assign value_part = after_value | split: ',' | first | strip | remove: '"' | remove: ' ' -%}
+
+                  {%- assign after_unit = metafield_raw | split: '"unit":' | last | strip -%}
+                  {%- assign unit_part = after_unit | split: '}' | first | strip | remove: '"' | remove: ' ' -%}
+
+                  {%- assign display_value = value_part | append: ' ' | append: unit_part -%}
+                {% endif %}
+                "{{ namespace }}.{{ key }}": "{{ display_value }}"{% unless forloop.last %},{% endunless %}
+              {%- endif -%}
+            {%- endfor -%}
+          }
+        }{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    {%- else -%}
+      {%- comment -%} All products (fallback) {%- endcomment -%}
+      {%- paginate collections.all.products by 1000 -%}
+        {%- for product in collections.all.products -%}
+          {
+            "id": {{ product.id | json }},
+            "title": {{ product.title | json }},
+            "handle": {{ product.handle | json }},
+            "price": {{ product.price | money | json }},
+            "url": {{ product.url | json }},
+            "vendor": {{ product.vendor | json }},
+            "type": {{ product.type | json }},
+            "variants": {{ product.variants | json }},
+            "featured_image": {
+              "src": {{ product.featured_image | img_url: 'medium' | json }}
+            },
+            "images": {{ product.images | json }},
+            "metafields": {
+             {%- for block in section.blocks -%}
+                {%- if block.type == "metafield" -%}
+                  {%- assign namespace = block.settings.namespace -%}
+                  {%- assign key = block.settings.key -%}
+                  {%- assign metafield_raw = product.metafields[namespace][key] | default: '' -%}
+                  {% assign meta_type = product.metafields[namespace][key].type %}
+                  {%- assign display_value = metafield_raw | escape -%}
+                  {% if meta_type == 'volume' %}
+                    {%- assign after_value = metafield_raw | split: '"value":' | last | strip -%}
+                    {%- assign value_part = after_value | split: ',' | first | strip | remove: '"' | remove: ' ' -%}
+
+                    {%- assign after_unit = metafield_raw | split: '"unit":' | last | strip -%}
+                    {%- assign unit_part = after_unit | split: '}' | first | strip | remove: '"' | remove: ' ' -%}
+
+                    {%- assign display_value = value_part | append: ' ' | append: unit_part -%}
+                  {% endif %}
+                  "{{ namespace }}.{{ key }}": "{{ display_value }}"{% unless forloop.last %},{% endunless %}
+                {%- endif -%}
+              {%- endfor -%}
+            }
+          }{% unless forloop.last %},{% endunless %}
+        {%- endfor -%}
+      {%- endpaginate -%}
+    {%- endif -%}
+  ]
+}
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // Get current product data with proper metafield handling
+  const currentProduct = {
+    id: {{ product.id | json }},
+    title: {{ product.title | json }},
+    price: {{ product.price | money | json }},
+    url: {{ product.url | json }},
+    featured_image: {
+      src: {{ product.featured_image | img_url: 'medium' | json }}
+    },
+    vendor: {{ product.vendor | json }},
+    type: {{ product.type | json }},
+    variants: {{ product.variants | json }},
+    handle: {{ product.handle | json }},
+    // For current product, use Liquid to get metafields
+    metafields: {
+      {%- for block in section.blocks -%}
+        {%- if block.type == "metafield" -%}
+          {%- assign namespace = block.settings.namespace -%}
+          {%- assign key = block.settings.key -%}
+          {%- assign metafield_raw = product.metafields[namespace][key] | default: '' -%}
+          {% assign meta_type = product.metafields[namespace][key].type %}
+          {%- assign display_value = metafield_raw | escape -%}
+          {% if meta_type == 'volume' %}
+            {%- assign after_value = metafield_raw | split: '"value":' | last | strip -%}
+            {%- assign value_part = after_value | split: ',' | first | strip | remove: '"' | remove: ' ' -%}
+
+            {%- assign after_unit = metafield_raw | split: '"unit":' | last | strip -%}
+            {%- assign unit_part = after_unit | split: '}' | first | strip | remove: '"' | remove: ' ' -%}
+
+            {%- assign display_value = value_part | append: ' ' | append: unit_part -%}
+          {% endif %}
+          "{{ namespace }}.{{ key }}": "{{ display_value }}"{% unless forloop.last %},{% endunless %}
+        {%- endif -%}
+      {%- endfor -%}
+    }
+  };
+
+  console.log('Current product metafields:', currentProduct.metafields);
+
+  // Initialize comparison with current product
+  initializeComparison(currentProduct);
+  
+  // Get section settings
+  const sectionSettings = {
+    maxProducts: {{ section.settings.max_products | default: 4 }},
+    modalBgColor: {{ section.settings.modal_bg_color | default: '#fefefe' | json }},
+    modalTextColor: {{ section.settings.modal_text_color | default: '#333333' | json }},
+    headingAlignment: {{ section.settings.heading_alignment | default: 'left' | json }},
+    collectionHandle: {{ section.settings.collection_handle | json }} || ''
+  };
+  
+  // Apply modal styling
+  applyModalStyling(sectionSettings);
+  
+  // Pagination variables
+  let currentPage = 1;
+  let allProducts = [];
+  let filteredProducts = [];
+  let searchQuery = '';
+  const productsPerPage = 20;
+
+  // Variables for change modal
+  let changeCurrentPage = 1;
+  let changeSearchQuery = '';
+  let productToReplaceId = null;
+  
+  // Get ALL preloaded products data - this is the KEY FIX
+  let allPreloadedProducts = [];
+  try {
+    const preloadedData = JSON.parse(document.getElementById('AllProductsData').textContent);
+    allPreloadedProducts = preloadedData.products || [];
+    console.log('ALL Preloaded products with metafields:', allPreloadedProducts.length, 'products');
+    
+    // Filter out current product and set as initial allProducts
+    allProducts = allPreloadedProducts.filter(product => product.id !== currentProduct.id);
+    console.log('Filtered products for comparison:', allProducts.length, 'products');
+    
+  } catch (error) {
+    console.error('Error parsing preloaded products data:', error);
+  }
+
+  // Event Delegation for Comparison Container - FIXED: Single event handler for all buttons
+  document.getElementById("comparison-container").addEventListener("click", function(e) {
+    // Handle Change buttons
+    if (e.target.classList.contains('btn-change')) {
+      const productCard = e.target.closest('.product-card');
+      if (productCard && !productCard.classList.contains('current')) {
+        const productId = productCard.getAttribute('data-product-id');
+        openChangeModal(productId);
+      }
+    }
+    
+    // Handle Remove buttons
+    if (e.target.classList.contains('remove-btn')) {
+      const productCard = e.target.closest('.product-card');
+      if (productCard && !productCard.classList.contains('current')) {
+        const productId = productCard.getAttribute('data-product-id');
+        removeProductFromComparison(productId);
+      }
+    }
+    
+    // Handle View buttons
+    if (e.target.classList.contains('btn-view')) {
+      const productCard = e.target.closest('.product-card');
+      if (productCard) {
+        const productId = productCard.getAttribute('data-product-id');
+        const product = getAllProducts().find(p => p.id == productId);
+        if (product && product.url) {
+          window.location.href = product.url;
+        }
+      }
+    }
+  });
+
+  // Open the modal
+  document.getElementById("open-modal-button").addEventListener("click", function() {
+    currentPage = 1;
+    searchQuery = '';
+    document.getElementById("product-search").value = '';
+    
+    // Use preloaded data directly - no API calls needed!
+    filterAndDisplayProducts();
+    document.getElementById("product-selection-modal").style.display = "block";
+  });
+
+  // Close the modal when clicking the X button
+  document.querySelectorAll(".close").forEach(closeBtn => {
+    closeBtn.addEventListener("click", function() {
+      document.getElementById("product-selection-modal").style.display = "none";
+      document.getElementById("product-change-modal").style.display = "none";
+    });
+  });
+
+  // Close the modal when clicking outside of it
+  window.addEventListener("click", function (event) {
+    const selectionModal = document.getElementById("product-selection-modal");
+    const changeModal = document.getElementById("product-change-modal");
+    
+    if (event.target === selectionModal) {
+      selectionModal.style.display = "none";
+    }
+    if (event.target === changeModal) {
+      changeModal.style.display = "none";
+    }
+  });
+
+  // Search functionality for selection modal
+  document.getElementById("product-search").addEventListener('input', function(e) {
+    searchQuery = e.target.value.toLowerCase();
+    currentPage = 1;
+    filterAndDisplayProducts();
+  });
+
+  // Search functionality for change modal
+  document.getElementById("change-product-search").addEventListener('input', function(e) {
+    changeSearchQuery = e.target.value.toLowerCase();
+    changeCurrentPage = 1;
+    filterAndDisplayChangeProducts();
+  });
+
+  // Load more products for selection modal
+  document.getElementById("load-more-button").addEventListener('click', function() {
+    currentPage++;
+    filterAndDisplayProducts();
+  });
+
+  // Load more products for change modal
+  document.getElementById("change-load-more-button").addEventListener('click', function() {
+    changeCurrentPage++;
+    filterAndDisplayChangeProducts();
+  });
+
+  function applyModalStyling(settings) {
+    const modalContent = document.querySelector('.modal-content');
+    const modalHeading = document.getElementById('modal-heading');
+    
+    if (modalContent) {
+      modalContent.style.backgroundColor = settings.modalBgColor;
+      modalContent.style.color = settings.modalTextColor;
+    }
+    
+    if (modalHeading) {
+      modalHeading.style.textAlign = settings.headingAlignment;
+    }
+  }
+
+  // SIMPLIFIED: No need for API calls - we have all data preloaded!
+  function filterAndDisplayProducts() {
+    const productList = document.getElementById("product-selection-list");
+    const loadMoreButton = document.getElementById("load-more-button");
+    const paginationInfo = document.getElementById("pagination-info");
+    
+    // Apply search filter
+    if (searchQuery) {
+      filteredProducts = allProducts.filter(product => 
+        product.title && product.title.toLowerCase().includes(searchQuery)
+      );
+    } else {
+      filteredProducts = [...allProducts];
+    }
+    
+    console.log('Filtered products for display:', filteredProducts.length);
+    
+    // Display products with pagination
+    displayProductsForSelection(filteredProducts);
+    
+    // Update pagination info
+    const startIndex = (currentPage - 1) * productsPerPage;
+    const endIndex = startIndex + productsPerPage;
+    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+    
+    paginationInfo.textContent = `Showing ${Math.min(endIndex, filteredProducts.length)} of ${filteredProducts.length} products`;
+    
+    // Show/hide load more button
+    if (currentPage < totalPages) {
+      loadMoreButton.style.display = 'block';
+      loadMoreButton.disabled = false;
+    } else {
+      loadMoreButton.style.display = 'none';
+    }
+  }
+
+  // Function to display products in the selection modal
+  function displayProductsForSelection(products) {
+    const productList = document.getElementById("product-selection-list");
+    
+    if (!products || products.length === 0) {
+      productList.innerHTML = '<div class="no-products">No products found matching your search.</div>';
+      return;
+    }
+    
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * productsPerPage;
+    const endIndex = startIndex + productsPerPage;
+    const productsToShow = products.slice(startIndex, endIndex);
+    
+    // Always clear the list when displaying new products
+    productList.innerHTML = '';
+    
+    // Get current comparison products
+    const comparisonProducts = getComparisonProductIds();
+    
+    productsToShow.forEach(product => {
+      const productOption = document.createElement('div');
+      productOption.className = 'product-option';
+      productOption.setAttribute('data-product-id', product.id);
+      productOption.setAttribute('data-product-handle', product.handle);
+      
+      // Get the correct image URL
+      let imageUrl = '/assets/no-image.jpg';
+      let imageAlt = product.title || 'Product image';
+      
+      if (product.featured_image) {
+        if (typeof product.featured_image === 'string') {
+          imageUrl = product.featured_image;
+        } else if (product.featured_image.src) {
+          imageUrl = product.featured_image.src;
+        }
+      } else if (product.images && product.images.length > 0) {
+        if (typeof product.images[0] === 'string') {
+          imageUrl = product.images[0];
+        } else if (product.images[0].src) {
+          imageUrl = product.images[0].src;
+        }
+      }
+      
+      // Ensure we have a proper Shopify image URL
+      if (!imageUrl.startsWith('http') && !imageUrl.startsWith('//')) {
+        if (imageUrl.startsWith('/')) {
+          imageUrl = `https://${window.location.hostname}${imageUrl}`;
+        }
+      }
+      
+      // Replace image size if needed
+      imageUrl = imageUrl.replace(/_(large|grande|medium|small)\./, '_small.');
+      
+      const productTitle = product.title || 'Untitled Product';
+      const productPrice = formatProductPrice(product);
+      const productHandle = product.handle || '';
+      
+      // Check if product is already in comparison
+      const isInComparison = comparisonProducts.includes(product.id);
+      const buttonText = isInComparison ? 'Added' : 'Add to Comparison';
+      const buttonClass = isInComparison ? 'add-to-comparison added' : 'add-to-comparison';
+      
+      productOption.innerHTML = `
+        <img src="${imageUrl}" alt="${imageAlt}" width="120" height="120" style="object-fit: cover;" onerror="this.src='/assets/no-image.jpg'">
+        <p style="margin: 10px 0; font-weight: bold;">${productTitle.length > 50 ? productTitle.substring(0, 50) + '...' : productTitle}</p>
+        <p style="margin: 5px 0; color: #333; font-weight: bold;">${productPrice}</p>
+        <button data-product-id="${product.id}" data-product-handle="${productHandle}" class="${buttonClass}">${buttonText}</button>
+      `;
+      
+      productList.appendChild(productOption);
+    });
+    
+    // Add event listeners to the "Add to Comparison" buttons using event delegation
+    productList.addEventListener('click', function(e) {
+      if (e.target.classList.contains('add-to-comparison')) {
+        const productId = e.target.getAttribute("data-product-id");
+        const product = allProducts.find(p => p.id == productId);
+        
+        if (product) {
+          if (e.target.classList.contains('added')) {
+            // Remove from comparison
+            removeProductFromComparison(productId);
+            e.target.textContent = 'Add to Comparison';
+            e.target.classList.remove('added');
+          } else {
+            // Add to comparison
+            console.log('Adding product to comparison:', product.title);
+            console.log('Product metafields:', product.metafields);
+            addProductToComparison(product);
+            e.target.textContent = 'Added';
+            e.target.classList.add('added');
+          }
+        }
+      }
+    });
+  }
+
+  // Function to initialize the comparison with the current product
+  function initializeComparison(product) {
+    const comparisonContainer = document.getElementById("comparison-container");
+    
+    // Get metafield values for current product
+    const specsHTML = generateSpecsHTML(product);
+    
+    comparisonContainer.innerHTML = `
+      <div class="product-card current" data-product-id="${product.id}">
+        <div class="product-badge">Current</div>
+        <img src="${product.featured_image.src}" alt="${product.title}" class="product-image">
+        <div class="product-name">${product.title.length > 30 ? product.title.substring(0, 30) + '...' : product.title}</div>
+        <p>${product.price}</p>
+        <div class="product-specs">
+          ${specsHTML}
+        </div>
+        <div class="product-actions-new">
+          <button class="btn-view">View Product</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Function to add a product to the comparison - FIXED: Removed individual event listeners
+  function addProductToComparison(product) {
+    const comparisonContainer = document.getElementById("comparison-container");
+    
+    // Check if product is already in comparison
+    const existingProduct = comparisonContainer.querySelector(`[data-product-id="${product.id}"]`);
+    if (existingProduct) {
+      alert('This product is already in the comparison.');
+      return;
+    }
+    
+    // Limit the number of comparison products
+    const comparisonProducts = comparisonContainer.querySelectorAll('.product-card');
+    if (comparisonProducts.length >= sectionSettings.maxProducts) {
+      alert(`Maximum number of comparison products (${sectionSettings.maxProducts}) reached. Please remove one before adding another.`);
+      return;
+    }
+    
+    // Get image URL for the comparison display
+    let imageUrl = '/assets/no-image.jpg';
+    if (product.featured_image) {
+      if (typeof product.featured_image === 'string') {
+        imageUrl = product.featured_image;
+      } else if (product.featured_image.src) {
+        imageUrl = product.featured_image.src;
+      }
+    } else if (product.images && product.images.length > 0) {
+      if (typeof product.images[0] === 'string') {
+        imageUrl = product.images[0];
+      } else if (product.images[0].src) {
+        imageUrl = product.images[0].src;
+      }
+    }
+    
+    const productTitle = product.title || 'Untitled Product';
+    const productHandle = product.handle || '';
+    
+    // Get metafield values
+    const productCode = getMetafieldValue(product, 'custom', 'product_code') || 'HP' + (1000 + comparisonProducts.length);
+    const productModel = getMetafieldValue(product, 'custom', 'product_model') || 'E' + (14000 + comparisonProducts.length);
+    const specsHTML = generateSpecsHTML(product);
+    
+    const productHTML = `
+      <div class="product-card" data-product-id="${product.id}">
+        <button class="remove-btn">×</button>
+        <img src="${imageUrl}" alt="${productTitle}" class="product-image" onerror="this.src='/assets/no-image.jpg'">
+        <div class="product-name">${productTitle.length > 30 ? product.title.substring(0, 30) + '...' : productTitle}</div>
+        <p>${product.price}</p>
+        <div class="product-specs">
+          ${specsHTML}
+        </div>
+        <div class="product-actions-new">
+          <button class="btn-view">View Product</button>
+          <button class="btn-change">Change</button>
+        </div>
+      </div>
+    `;
+    
+    comparisonContainer.innerHTML += productHTML;
+    
+    // REMOVED: Individual event listeners - now handled by event delegation
+    
+    // Update all "Add to Comparison" buttons in the modal
+    updateAddToComparisonButtons();
+    
+    // Close the modal after adding if we've reached the max
+    if (comparisonContainer.querySelectorAll('.product-card').length >= sectionSettings.maxProducts) {
+      document.getElementById("product-selection-modal").style.display = "none";
+    }
+  }
+
+  // Function to remove a product from comparison
+  function removeProductFromComparison(productId) {
+    const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+    if (productElement && !productElement.classList.contains('current')) {
+      productElement.remove();
+      updateAddToComparisonButtons();
+    }
+  }
+
+  // Function to get all product IDs currently in comparison
+  function getComparisonProductIds() {
+    const comparisonContainer = document.getElementById("comparison-container");
+    const productItems = comparisonContainer.querySelectorAll('.product-card');
+    const productIds = [];
+    
+    productItems.forEach(item => {
+      productIds.push(parseInt(item.getAttribute('data-product-id')));
+    });
+    
+    return productIds;
+  }
+
+  // Function to update all "Add to Comparison" buttons in the modal
+  function updateAddToComparisonButtons() {
+    const comparisonProductIds = getComparisonProductIds();
+    
+    document.querySelectorAll('.add-to-comparison').forEach(button => {
+      const productId = parseInt(button.getAttribute('data-product-id'));
+      
+      if (comparisonProductIds.includes(productId)) {
+        button.textContent = 'Added';
+        button.classList.add('added');
+      } else {
+        button.textContent = 'Add to Comparison';
+        button.classList.remove('added');
+      }
+    });
+  }
+
+  // Function to open the change modal
+  function openChangeModal(productId) {
+    productToReplaceId = productId;
+    changeCurrentPage = 1;
+    changeSearchQuery = '';
+    document.getElementById("change-product-search").value = '';
+    
+    filterAndDisplayChangeProducts();
+    document.getElementById("product-change-modal").style.display = "block";
+  }
+
+  // Function to filter and display products in the change modal
+  function filterAndDisplayChangeProducts() {
+    const productList = document.getElementById("product-change-list");
+    const loadMoreButton = document.getElementById("change-load-more-button");
+    const paginationInfo = document.getElementById("change-pagination-info");
+    
+    // Apply search filter
+    let changeFilteredProducts;
+    if (changeSearchQuery) {
+      changeFilteredProducts = allProducts.filter(product => 
+        product.title && product.title.toLowerCase().includes(changeSearchQuery)
+      );
+    } else {
+      changeFilteredProducts = [...allProducts];
+    }
+    
+    // Filter out products already in comparison (except the one being replaced)
+    const comparisonProductIds = getComparisonProductIds();
+    changeFilteredProducts = changeFilteredProducts.filter(product => 
+      !comparisonProductIds.includes(product.id) || product.id === productToReplaceId
+    );
+    
+    console.log('Filtered products for change:', changeFilteredProducts.length);
+    
+    // Display products with pagination
+    displayProductsForChange(changeFilteredProducts);
+    
+    // Update pagination info
+    const startIndex = (changeCurrentPage - 1) * productsPerPage;
+    const endIndex = startIndex + productsPerPage;
+    const totalPages = Math.ceil(changeFilteredProducts.length / productsPerPage);
+    
+    paginationInfo.textContent = `Showing ${Math.min(endIndex, changeFilteredProducts.length)} of ${changeFilteredProducts.length} products`;
+    
+    // Show/hide load more button
+    if (changeCurrentPage < totalPages) {
+      loadMoreButton.style.display = 'block';
+      loadMoreButton.disabled = false;
+    } else {
+      loadMoreButton.style.display = 'none';
+    }
+  }
+
+  // Function to display products in the change modal
+  function displayProductsForChange(products) {
+    const productList = document.getElementById("product-change-list");
+    
+    if (!products || products.length === 0) {
+      productList.innerHTML = '<div class="no-products">No products found matching your search.</div>';
+      return;
+    }
+    
+    // Calculate pagination
+    const startIndex = (changeCurrentPage - 1) * productsPerPage;
+    const endIndex = startIndex + productsPerPage;
+    const productsToShow = products.slice(startIndex, endIndex);
+    
+    // If we're on page 1, clear the list, otherwise append
+    if (changeCurrentPage === 1) {
+      productList.innerHTML = '';
+    }
+    
+    productsToShow.forEach(product => {
+      // Skip if product already exists in the list
+      if (document.querySelector(`#product-change-list [data-product-id="${product.id}"]`)) {
+        return;
+      }
+      
+      const productOption = document.createElement('div');
+      productOption.className = 'product-option';
+      productOption.setAttribute('data-product-id', product.id);
+      productOption.setAttribute('data-product-handle', product.handle);
+      
+      // Get the correct image URL
+      let imageUrl = '/assets/no-image.jpg';
+      let imageAlt = product.title || 'Product image';
+      
+      if (product.featured_image) {
+        if (typeof product.featured_image === 'string') {
+          imageUrl = product.featured_image;
+        } else if (product.featured_image.src) {
+          imageUrl = product.featured_image.src;
+        }
+      } else if (product.images && product.images.length > 0) {
+        if (typeof product.images[0] === 'string') {
+          imageUrl = product.images[0];
+        } else if (product.images[0].src) {
+          imageUrl = product.images[0].src;
+        }
+      }
+      
+      // Ensure we have a proper Shopify image URL
+      if (!imageUrl.startsWith('http') && !imageUrl.startsWith('//')) {
+        if (imageUrl.startsWith('/')) {
+          imageUrl = `https://${window.location.hostname}${imageUrl}`;
+        }
+      }
+      
+      // Replace image size if needed
+      imageUrl = imageUrl.replace(/_(large|grande|medium|small)\./, '_small.');
+      
+      const productTitle = product.title || 'Untitled Product';
+      const productPrice = formatProductPrice(product);
+      
+      productOption.innerHTML = `
+        <img src="${imageUrl}" alt="${imageAlt}" width="120" height="120" style="object-fit: cover;" onerror="this.src='/assets/no-image.jpg'">
+        <p style="margin: 10px 0; font-weight: bold;">${productTitle.length > 50 ? productTitle.substring(0, 50) + '...' : productTitle}</p>
+        <p style="margin: 5px 0; color: #333; font-weight: bold;">${productPrice}</p>
+      `;
+      
+      productList.appendChild(productOption);
+      
+      // Add click event to select product for replacement
+      productOption.addEventListener('click', function() {
+        // Remove selected class from all options
+        document.querySelectorAll('#product-change-list .product-option').forEach(option => {
+          option.classList.remove('selected');
+        });
+        
+        // Add selected class to clicked option
+        this.classList.add('selected');
+        
+        // Replace the product in comparison
+        replaceProductInComparison(productToReplaceId, product);
+        
+        // Close the modal after a short delay
+        setTimeout(() => {
+          document.getElementById("product-change-modal").style.display = "none";
+        }, 500);
+      });
+    });
+  }
+
+  // Function to replace a product in the comparison
+  function replaceProductInComparison(oldProductId, newProduct) {
+    // Remove the old product
+    removeProductFromComparison(oldProductId);
+    
+    // Add the new product
+    addProductToComparison(newProduct);
+    
+    // Update the modal buttons
+    updateAddToComparisonButtons();
+  }
+
+  // Function to get metafield value
+  function getMetafieldValue(product, namespace, key) {
+    if (!product.metafields) return null;
+    
+    // Try different ways to access metafield value
+    const metafieldKey = `${namespace}.${key}`;
+    
+    // Method 1: Check combined namespace.key
+    if (product.metafields[metafieldKey] !== undefined && product.metafields[metafieldKey] !== null && product.metafields[metafieldKey] !== '') {
+      return product.metafields[metafieldKey];
+    }
+    // Method 2: Check nested structure
+    else if (product.metafields[namespace] && product.metafields[namespace][key] !== undefined && product.metafields[namespace][key] !== null && product.metafields[namespace][key] !== '') {
+      return product.metafields[namespace][key];
+    }
+    // Method 3: Check direct key
+    else if (product.metafields[key] !== undefined && product.metafields[key] !== null && product.metafields[key] !== '') {
+      return product.metafields[key];
+    }
+    
+    return null;
+  }
+
+  // Function to generate specs HTML from metafields
+  function generateSpecsHTML(product) {
+    let specsHTML = '';
+    
+    // Get metafield blocks from section settings
+    const metafieldBlocks = [];
+    {% if section.blocks %}
+      {% for block in section.blocks %}
+        {% if block.type == "metafield" %}
+          metafieldBlocks.push({
+            settings: {
+              namespace: {{ block.settings.namespace | json }},
+              key: {{ block.settings.key | json }},
+              label: {{ block.settings.label | json }}
+            }
+          });
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    
+    console.log('Metafield blocks to display:', metafieldBlocks);
+    
+    metafieldBlocks.forEach(block => {
+      const namespace = block.settings.namespace;
+      const key = block.settings.key;
+      const label = block.settings.label || key;
+      
+      if (namespace && key) {
+        const metafieldValue = getMetafieldValue(product, namespace, key);
+        console.log('metafieldValue', typeof metafieldValue);
+        // If we found a metafield value, display it
+        if (metafieldValue) {
+          specsHTML += `
+            <div class="spec-row">
+              {% comment %} <span class="spec-label">${label}</span> {% endcomment %}
+              <span class="spec-value">${metafieldValue}</span>
+            </div>
+          `;
+        }else{
+          specsHTML += `
+            <div class="spec-row">
+              <span class="spec-value"></span>
+            </div>
+          `;
+        }
+      }
+    });
+    
+    // If no metafields found, show default specs
+    if (!specsHTML) {
+      specsHTML = ``;
+    }
+    
+    return specsHTML;
+  }
+
+  // Helper function to get all products (including current)
+  function getAllProducts() {
+    return [currentProduct, ...allProducts];
+  }
+
+  // Improved function to format product price
+  function formatProductPrice(product) {
+    // Check different possible price properties in Shopify JSON response
+    let price = null;
+    
+    // Try different price properties
+    if (product.price) {
+      price = product.price;
+    } else if (product.variants && product.variants.length > 0) {
+      price = product.variants[0].price;
+    }
+    
+    // If we found a price, format it
+    if (price) {
+      // Check if price is already formatted (string with currency symbol)
+      if (typeof price === 'string' && (price.includes('$') || price.includes('€') || price.includes('£'))) {
+        return price;
+      }
+      
+      // If price is a number (in cents), convert to dollars
+      if (typeof price === 'number') {
+        // Check if price is in cents (typical Shopify format) or dollars
+        if (price > 1000) { // If price is more than $10, assume it's in cents
+          return '$' + (price / 100).toFixed(2);
+        } else {
+          return '$' + price.toFixed(2);
+        }
+      }
+      
+      // If price is a string but doesn't contain currency symbol
+      if (typeof price === 'string') {
+        const numPrice = parseFloat(price);
+        if (!isNaN(numPrice)) {
+          if (numPrice > 1000) { // Assume cents
+            return '£' + (numPrice / 100).toFixed(2);
+          } else {
+            return '£' + numPrice.toFixed(2);
+          }
+        }
+      }
+    }
+    
+    // If we can't determine the price, show a fallback
+    return 'Price unavailable';
+  }
+});
+</script>
+{% schema %}
+{
+  "name": "Custom Product Comparison",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Product Comparison"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subheading",
+      "label": "Sub Heading",
+      "default":"Compare features and specifications"
+    },
+    {
+      "type": "header",
+      "content": "Product Comparison"
+    },
+    {
+      "type": "collection",
+      "label": "Collection for Comparison",
+      "id": "collection_handle",
+      "info": "Select a collection to show products from. Leave empty to show all products."
+    },
+    {
+      "type": "range",
+      "id": "max_products",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "label": "Maximum Products for Comparison",
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "comparison_alignment",
+      "label": "Comparison Alignment",
+      "options": [
+        {
+          "value": "flex-start",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "flex-end",
+          "label": "Right"
+        },
+        {
+          "value": "space-between",
+          "label": "Space Between"
+        }
+      ],
+      "default": "flex-start"
+    },
+    {
+      "type": "header",
+      "content": "Product Card Styling"
+    },
+    {
+      "type": "color",
+      "id": "product_bg_color",
+      "label": "Product Background Color",
+      "default": "transparent"
+    },
+    {
+      "type": "color",
+      "id": "product_border_color",
+      "label": "Product Border Color",
+      "default": "#ddd"
+    },
+    {
+      "type": "text",
+      "id": "product_border_radius",
+      "label": "Product Border Radius",
+      "default": "0px"
+    },
+    {
+      "type": "text",
+      "id": "product_padding",
+      "label": "Product Padding",
+      "default": "20px"
+    },
+    {
+      "type": "text",
+      "id": "product_min_width",
+      "label": "Product Minimum Width",
+      "default": "200px"
+    },
+    {
+      "type": "text",
+      "id": "product_max_width",
+      "label": "Product Maximum Width",
+      "default": "250px"
+    },
+    {
+      "type": "text",
+      "id": "product_hover_scale",
+      "label": "Product Hover Scale",
+      "default": "1.05"
+    },
+    {
+      "type": "text",
+      "id": "product_hover_shadow",
+      "label": "Product Hover Shadow",
+      "default": "10px"
+    },
+    {
+      "type": "color",
+      "id": "current_product_border_color",
+      "label": "Current Product Border Color",
+      "default": "#00FF00"
+    },
+    {
+      "type": "color",
+      "id": "current_label_bg_color",
+      "label": "Current Label Background Color",
+      "default": "#00FF00"
+    },
+    {
+      "type": "color",
+      "id": "current_label_text_color",
+      "label": "Current Label Text Color",
+      "default": "#FFF"
+    },
+    {
+      "type": "text",
+      "id": "current_label_border_radius",
+      "label": "Current Label Border Radius",
+      "default": "0px"
+    },
+    {
+      "type": "header",
+      "content": "Button Styling"
+    },
+    {
+      "type": "color",
+      "id": "button_bg_color",
+      "label": "Button Background Color",
+      "default": "#4CAF50"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button Text Color",
+      "default": "#FFF"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_bg_color",
+      "label": "Button Hover Background Color",
+      "default": "#45a049"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_text_color",
+      "label": "Button Hover Text Color",
+      "default": "#FFF"
+    },
+    {
+      "type": "text",
+      "id": "button_padding",
+      "label": "Button Padding",
+      "default": "10px 20px"
+    },
+    {
+      "type": "text",
+      "id": "button_border_radius",
+      "label": "Button Border Radius",
+      "default": "5px"
+    },
+    {
+      "type": "text",
+      "id": "button_font_size",
+      "label": "Button Font Size",
+      "default": "14px"
+    },
+    {
+      "type": "text",
+      "id": "button_border",
+      "label": "Button Border",
+      "default": "none"
+    },
+    {
+      "type": "color",
+      "id": "change_btn_color",
+      "label": "Change Button Color",
+      "default": "#fff"
+    },
+    {
+      "type": "color",
+      "id": "change_btn_bg",
+      "label": "Change Button Bg Color",
+      "default": "#dc3545"
+    },
+    {
+      "type": "color",
+      "id": "change_btn_hover",
+      "label": "Change Button Hover Color",
+      "default": "#dc3545"
+    },
+    {
+      "type": "color",
+      "id": "remove_btn_bg",
+      "label": "Remove Button Bg Color",
+      "default": "#dc3545"
+    },
+    {
+      "type": "color",
+      "id": "remove_btn_hover",
+      "label": "Remove Button Hover Color",
+      "default": "#dc3545"
+    },
+    {
+      "type": "header",
+      "content": "Modal Styling"
+    },
+    {
+      "type": "color",
+      "id": "modal_bg_color",
+      "label": "Modal Background Color",
+      "default": "#fefefe"
+    },
+    {
+      "type": "color",
+      "id": "modal_text_color",
+      "label": "Modal Text Color",
+      "default": "#333333"
+    },
+    {
+      "type": "text",
+      "id": "modal_padding",
+      "label": "Modal Padding",
+      "default": "20px"
+    },
+    {
+      "type": "text",
+      "id": "modal_max_width",
+      "label": "Modal Maximum Width",
+      "default": "800px"
+    },
+    {
+      "type": "text",
+      "id": "modal_border_radius",
+      "label": "Modal Border Radius",
+      "default": "8px"
+    },
+    {
+      "type": "text",
+      "id": "modal_overlay_opacity",
+      "label": "Modal Overlay Opacity",
+      "default": "0.5"
+    },
+    {
+      "type": "color",
+      "id": "close_button_color",
+      "label": "Close Button Color",
+      "default": "#aaa"
+    },
+    {
+      "type": "color",
+      "id": "close_button_hover_color",
+      "label": "Close Button Hover Color",
+      "default": "#000"
+    },
+    {
+      "type": "text",
+      "id": "close_button_size",
+      "label": "Close Button Size",
+      "default": "28px"
+    },
+    {
+      "type": "header",
+      "content": "Modal Heading"
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Heading Alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "color",
+      "id": "modal_heading_color",
+      "label": "Modal Heading Color",
+      "default": "#000"
+    },
+    {
+      "type": "text",
+      "id": "modal_heading_font_size",
+      "label": "Modal Heading Font Size",
+      "default": "24px"
+    },
+    {
+      "type": "text",
+      "id": "modal_heading_margin_bottom",
+      "label": "Modal Heading Margin Bottom",
+      "default": "20px"
+    },
+    {
+      "type": "header",
+      "content": "Modal Product Grid"
+    },
+    {
+      "type": "text",
+      "id": "modal_product_min_width",
+      "label": "Modal Product Minimum Width",
+      "default": "150px"
+    },
+    {
+      "type": "text",
+      "id": "modal_grid_gap",
+      "label": "Modal Grid Gap",
+      "default": "15px"
+    },
+    {
+      "type": "color",
+      "id": "modal_product_bg_color",
+      "label": "Modal Product Background Color",
+      "default": "#FFF"
+    },
+    {
+      "type": "color",
+      "id": "modal_product_border_color",
+      "label": "Modal Product Border Color",
+      "default": "#eee"
+    },
+    {
+      "type": "text",
+      "id": "modal_product_border_radius",
+      "label": "Modal Product Border Radius",
+      "default": "5px"
+    },
+    {
+      "type": "text",
+      "id": "modal_product_padding",
+      "label": "Modal Product Padding",
+      "default": "10px"
+    },
+    {
+      "type": "color",
+      "id": "modal_product_title_color",
+      "label": "Modal Product Title Color",
+      "default": "#000"
+    },
+    {
+      "type": "text",
+      "id": "modal_product_title_font_size",
+      "label": "Modal Product Title Font Size",
+      "default": "14px"
+    },
+    {
+      "type": "color",
+      "id": "modal_product_price_color",
+      "label": "Modal Product Price Color",
+      "default": "#333"
+    },
+    {
+      "type": "text",
+      "id": "modal_product_price_font_size",
+      "label": "Modal Product Price Font Size",
+      "default": "14px"
+    },
+    {
+      "type": "header",
+      "content": "Modal Buttons"
+    },
+    {
+      "type": "color",
+      "id": "modal_button_bg_color",
+      "label": "Modal Button Background Color",
+      "default": "#4CAF50"
+    },
+    {
+      "type": "color",
+      "id": "modal_button_text_color",
+      "label": "Modal Button Text Color",
+      "default": "#FFF"
+    },
+    {
+      "type": "color",
+      "id": "modal_button_hover_bg_color",
+      "label": "Modal Button Hover Background Color",
+      "default": "#45a049"
+    },
+    {
+      "type": "text",
+      "id": "modal_button_padding",
+      "label": "Modal Button Padding",
+      "default": "8px 16px"
+    },
+    {
+      "type": "text",
+      "id": "modal_button_border_radius",
+      "label": "Modal Button Border Radius",
+      "default": "4px"
+    },
+    {
+      "type": "text",
+      "id": "modal_button_font_size",
+      "label": "Modal Button Font Size",
+      "default": "14px"
+    },
+    {
+      "type": "header",
+      "content": "Open Modal Button"
+    },
+    {
+      "type": "color",
+      "id": "open_modal_button_bg_color",
+      "label": "Open Modal Button Background Color",
+      "default": "#007bff"
+    },
+    {
+      "type": "color",
+      "id": "open_modal_button_text_color",
+      "label": "Open Modal Button Text Color",
+      "default": "#FFF"
+    },
+    {
+      "type": "color",
+      "id": "open_modal_button_hover_bg_color",
+      "label": "Open Modal Button Hover Background Color",
+      "default": "#0056b3"
+    },
+    {
+      "type": "text",
+      "id": "open_modal_button_padding",
+      "label": "Open Modal Button Padding",
+      "default": "10px 20px"
+    },
+    {
+      "type": "text",
+      "id": "open_modal_button_border_radius",
+      "label": "Open Modal Button Border Radius",
+      "default": "4px"
+    },
+    {
+      "type": "text",
+      "id": "open_modal_button_font_size",
+      "label": "Open Modal Button Font Size",
+      "default": "16px"
+    },
+    {
+      "type": "header",
+      "content": "Remove Button"
+    },
+    {
+      "type": "color",
+      "id": "remove_button_bg_color",
+      "label": "Remove Button Background Color",
+      "default": "#ff4444"
+    },
+    {
+      "type": "color",
+      "id": "remove_button_text_color",
+      "label": "Remove Button Text Color",
+      "default": "#FFF"
+    },
+    {
+      "type": "color",
+      "id": "remove_button_hover_bg_color",
+      "label": "Remove Button Hover Background Color",
+      "default": "#cc0000"
+    },
+    {
+      "type": "text",
+      "id": "remove_button_size",
+      "label": "Remove Button Size",
+      "default": "24px"
+    },
+    {
+      "type": "text",
+      "id": "remove_button_font_size",
+      "label": "Remove Button Font Size",
+      "default": "14px"
+    },
+    {
+      "type": "header",
+      "content": "Search Styling"
+    },
+    {
+      "type": "color",
+      "id": "search_bg_color",
+      "label": "Search Background Color",
+      "default": "#FFF"
+    },
+    {
+      "type": "color",
+      "id": "search_text_color",
+      "label": "Search Text Color",
+      "default": "#000"
+    },
+    {
+      "type": "color",
+      "id": "search_border_color",
+      "label": "Search Border Color",
+      "default": "#ddd"
+    },
+    {
+      "type": "text",
+      "id": "search_border_radius",
+      "label": "Search Border Radius",
+      "default": "4px"
+    },
+    {
+      "type": "text",
+      "id": "search_padding",
+      "label": "Search Padding",
+      "default": "10px 40px 10px 15px"
+    },
+    {
+      "type": "text",
+      "id": "search_font_size",
+      "label": "Search Font Size",
+      "default": "16px"
+    },
+    {
+      "type": "color",
+      "id": "search_icon_color",
+      "label": "Search Icon Color",
+      "default": "#777"
+    },
+    {
+      "type": "header",
+      "content": "Load More Button"
+    },
+    {
+      "type": "color",
+      "id": "load_more_button_bg_color",
+      "label": "Load More Button Background Color",
+      "default": "#007bff"
+    },
+    {
+      "type": "color",
+      "id": "load_more_button_text_color",
+      "label": "Load More Button Text Color",
+      "default": "#FFF"
+    },
+    {
+      "type": "color",
+      "id": "load_more_button_hover_bg_color",
+      "label": "Load More Button Hover Background Color",
+      "default": "#0056b3"
+    },
+    {
+      "type": "color",
+      "id": "load_more_button_disabled_bg_color",
+      "label": "Load More Button Disabled Background Color",
+      "default": "#cccccc"
+    },
+    {
+      "type": "text",
+      "id": "load_more_button_padding",
+      "label": "Load More Button Padding",
+      "default": "10px 20px"
+    },
+    {
+      "type": "text",
+      "id": "load_more_button_border_radius",
+      "label": "Load More Button Border Radius",
+      "default": "4px"
+    },
+    {
+      "type": "text",
+      "id": "load_more_button_font_size",
+      "label": "Load More Button Font Size",
+      "default": "16px"
+    },
+    {
+      "type": "text",
+      "id": "pagination_font_size",
+      "label": "Pagination Info Font Size",
+      "default": "14px"
+    },
+    {
+      "type": "header",
+      "content": "Product Images"
+    },
+    {
+      "type": "text",
+      "id": "product_image_border_radius",
+      "label": "Product Image Border Radius",
+      "default": "0px"
+    },
+    {
+      "type": "header",
+      "content": "Metafield Styling"
+    },
+    {
+      "type": "color",
+      "id": "metafield_label_color",
+      "label": "Metafield Label Color",
+      "default": "#000"
+    },
+    {
+      "type": "text",
+      "id": "metafield_label_font_size",
+      "label": "Metafield Label Font Size",
+      "default": "14px"
+    },
+    {
+      "type": "color",
+      "id": "metafield_value_color",
+      "label": "Metafield Value Color",
+      "default": "#555"
+    },
+    {
+      "type": "text",
+      "id": "metafield_value_font_size",
+      "label": "Metafield Value Font Size",
+      "default": "14px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "metafield",
+      "name": "Metafield",
+      "settings": [
+        {
+          "type": "text",
+          "id": "namespace",
+          "label": "Metafield Namespace",
+          "info": "The namespace of the metafield (e.g., 'custom')"
+        },
+        {
+          "type": "text",
+          "id": "key",
+          "label": "Metafield Key",
+          "info": "The key of the metafield (e.g., 'material')"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Display Label",
+          "info": "Optional: Custom label to display (defaults to the key)"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom Product Comparison",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}
