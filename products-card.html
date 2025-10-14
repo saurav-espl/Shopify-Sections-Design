@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Card Using GSAP</title>
+    <link rel="stylesheet" href="https://use.typekit.net/nyc6jda.css">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --panel-bg: #1a1721;
+            --card-bg: #f7f7f9;
+            --muted: #9a9a9a;
+        }
+
+        body {
+            margin: 0;
+            font-family: termina, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+            background-color: #f6f6f6;
+        }
+
+        .spacer {
+            height: 80vh;
+            background: linear-gradient(#fff, #f6f6f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #666;
+        }
+
+        /* Section */
+        .pin-reveal {
+            background: var(--panel-bg);
+            color: #fff;
+            position: relative;
+            padding: 120px 20px;
+            overflow: hidden;
+        }
+
+        /* Giant translucent heading that sits over cards */
+        .pin-reveal__title {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            font-weight: 900;
+            font-size: clamp(48px, 12vw, 200px);
+            text-align: center;
+            letter-spacing: 6px;
+            color: rgba(255, 255, 255, 0.12);
+            mix-blend-mode: normal;
+            z-index: 5;
+            white-space: nowrap;
+            opacity: 0;
+        }
+
+        .pin-reveal__inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            min-height: 60vh;
+            padding-top: 80px;
+            padding-bottom: 120px;
+            perspective: 1200px;
+        }
+
+        /* Cards row centered horizontally */
+        .cards-row {
+            display: flex;
+            gap: clamp(16px, 4vw, 36px);
+            align-items: end;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .product-card {
+            width: clamp(160px, 19vw, 220px);
+            background: linear-gradient(180deg, #fff 0%, #f5f6f8 100%);
+            border-radius: 18px;
+            padding: 14px;
+            box-shadow: 0 10px 30px rgba(10, 10, 20, 0.12);
+            transform-origin: 50% 70%;
+            will-change: transform, opacity;
+            opacity: 0;
+            transform: translateY(80px) rotateX(18deg) scale(0.96);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .product-card__media {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(10, 10, 20, 0.06);
+        }
+
+        .product-card__media img {
+            width: 100%;
+            height: 230px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .product-card__title {
+            font-size: 14px;
+            color: #222;
+            margin: 12px 0 6px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .product-card__price {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* small screens — stack fewer cards and smaller */
+        @media (max-width:900px) {
+            .pin-reveal__inner {
+                min-height: 50vh;
+                padding-bottom: 80px
+            }
+
+            .product-card__media img {
+                height: 160px
+            }
+        }
+
+        @media (max-width:560px) {
+            .cards-row {
+                gap: 12px
+            }
+
+            .product-card {
+                width: 40vw
+            }
+
+            .pin-reveal__title {
+                font-size: clamp(40px, 18vw, 100px)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="spacer">
+        <h2>Scroll down to see the Maya-style product reveal</h2>
+    </div>
+
+    <section class="pin-reveal" id="pinReveal">
+        <div class="pin-reveal__title" id="pinTitle">TRENDING PRODUCTS</div>
+
+        <div class="pin-reveal__inner">
+            <div class="cards-row">
+                <!-- Product cards -->
+                <div class="product-card">
+                    <div class="product-card__media">
+                        <img src="https://images.unsplash.com/photo-1556856425-366d6618905d?auto=format&fit=crop&w=600&q=80"
+                            alt="Full Sleeve Round Neck T-shirt">
+                    </div>
+                    <div class="product-card__title">Racer Back Sports top</div>
+                    <div class="product-card__price">Rs. 396,500.00</div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-card__media">
+                        <img src="https://images.unsplash.com/photo-1520271348391-049dd132bb7c?auto=format&fit=crop&w=600&q=80"
+                            alt="Loose T-shirt">
+                    </div>
+                    <div class="product-card__title">Racer Back Sports top</div>
+                    <div class="product-card__price">Rs. 315,400.00</div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-card__media">
+                        <img src="https://images.unsplash.com/photo-1609166214994-502d326bafee?auto=format&fit=crop&w=600&q=80"
+                            alt="Polyester Women Gym Suit">
+                    </div>
+                    <div class="product-card__title">Racer Back Sports top</div>
+                    <div class="product-card__price">Rs. 405,500.00</div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-card__media">
+                        <img src="https://images.unsplash.com/photo-1589882265634-84f7eb9a3414?auto=format&fit=crop&w=600&q=80"
+                            alt="Sleeveless Crop Top">
+                    </div>
+                    <div class="product-card__title">Racer Back Sports top</div>
+                    <div class="product-card__price">Rs. 603,800.00</div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-card__media">
+                        <img src="https://images.unsplash.com/photo-1514689832698-319d3bcac5d5?auto=format&fit=crop&w=600&q=80"
+                            alt="Racer Back Sports top">
+                    </div>
+                    <div class="product-card__title">Racer Back Sports top</div>
+                    <div class="product-card__price">Rs. 135,200.00</div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-card__media">
+                        <img src="https://images.unsplash.com/photo-1571450669798-fcb4c543f6a4?auto=format&fit=crop&w=600&q=80"
+                            alt="Skirt and 3 pcs set">
+                    </div>
+                    <div class="product-card__title">Racer Back Sports top</div>
+                    <div class="product-card__price">Rs. 495,000.00</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="spacer">
+        <h2>Continue scrolling</h2>
+    </div>
+
+    <!-- GSAP -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Select elements
+        const section = document.querySelector("#pinReveal");
+        const cards = gsap.utils.toArray(".product-card");
+        const title = document.querySelector("#pinTitle");
+
+        // Build a timeline that runs as the user scrolls while section is pinned.
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: section,
+                start: "top top",
+                end: "+=160%",
+                scrub: 0.8,
+                pin: true,
+                anticipatePin: 1,
+                markers: false // Set to true for debugging
+            }
+        });
+
+        // 1) Fade in the big title
+        tl.fromTo(title, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.6 }, 0);
+
+        // 2) Cards: reveal from center with stagger
+        tl.to(cards, {
+            duration: 1.4,
+            opacity: 1,
+            y: 0,
+            rotateX: 0,
+            scale: 1,
+            ease: "power2.out",
+            stagger: {
+                each: 0.16,
+                from: "center"
+            }
+        }, 0.15);
+
+        // 3) Add subtle parallax/tilt effect on scroll
+        ScrollTrigger.create({
+            trigger: section,
+            start: "top top",
+            end: "+=160%",
+            scrub: true,
+            onUpdate: self => {
+                const p = self.progress;
+                // Apply subtle rotation Y based on card index and progress
+                cards.forEach((c, i) => {
+                    // Center-based offset
+                    const centerIndex = (cards.length - 1) / 2;
+                    const offset = i - centerIndex;
+                    // Small tilt: cards on left tilt -6..0..6 deg as progress goes from 0..1
+                    const tilt = offset * 6 * (p - 0.5) * 0.6;
+                    c.style.transform = `translateY(${(1 - p) * 60}px) rotateX(${18 - p * 18}deg) rotateY(${tilt}deg) scale(${0.96 + p * 0.04})`;
+                });
+            }
+        });
+
+        // Initial setup
+        ScrollTrigger.addEventListener("refreshInit", () => {
+            cards.forEach(c => {
+                c.style.willChange = "transform, opacity";
+            });
+        });
+    </script>
+</body>
+
+</html>
